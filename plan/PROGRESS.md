@@ -8,7 +8,7 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D1-07` Deploy targets
+- [ ] `D2-FE-01` App shell + library page
 
 ## Up next
 
@@ -30,6 +30,11 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D2-BE-04` — Pipeline state machine + worker — 2026-05-20
+- [x] `D2-BE-03` — Classifier agent — 2026-05-20
+- [x] `D2-BE-02` — File-type-specific parsers — 2026-05-20
+- [x] `D2-BE-01` — Document upload endpoint — 2026-05-20
+- [x] `D1-07` — Deploy targets — 2026-05-20
 - [x] `D1-06` — Web scaffold — 2026-05-20
 - [x] `D1-05` — Worker scaffold — 2026-05-20
 - [x] `D1-04` — API scaffold — 2026-05-20
@@ -48,13 +53,13 @@ _(none)_
 - [x] `D1-04` API scaffold
 - [x] `D1-05` Worker scaffold
 - [x] `D1-06` Web scaffold
-- [ ] `D1-07` Deploy targets
+- [x] `D1-07` Deploy targets
 
 ### Day 2 — Backend core + Frontend upload
-- [ ] `D2-BE-01` Document upload endpoint
-- [ ] `D2-BE-02` File-type-specific parsers
-- [ ] `D2-BE-03` Classifier agent
-- [ ] `D2-BE-04` Pipeline state machine + worker task
+- [x] `D2-BE-01` Document upload endpoint
+- [x] `D2-BE-02` File-type-specific parsers
+- [x] `D2-BE-03` Classifier agent
+- [x] `D2-BE-04` Pipeline state machine + worker task
 - [ ] `D2-FE-01` App shell + library page
 - [ ] `D2-FE-02` Upload widget
 - [ ] `D2-FE-03` Document grid with Realtime
