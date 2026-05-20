@@ -32,6 +32,9 @@ supabase
 # Tracing
 langfuse
 
+# Env
+python-dotenv
+
 # Logging
 structlog
 

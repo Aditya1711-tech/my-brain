@@ -1,8 +1,7 @@
-from arq import cron
 from arq.connections import RedisSettings
 
 from app.config import settings
-from app.worker.tasks import process_document_dummy
+from app.worker.tasks import process_document
 
 
 def parse_redis_url(url: str) -> RedisSettings:
@@ -21,7 +20,7 @@ def parse_redis_url(url: str) -> RedisSettings:
 class WorkerSettings:
     """arq worker configuration."""
 
-    functions = [process_document_dummy]
+    functions = [process_document]
     redis_settings = parse_redis_url(settings.redis_url)
     max_jobs = 5
     job_timeout = 300  # 5 minutes per job
