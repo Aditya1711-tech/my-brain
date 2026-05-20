@@ -1,0 +1,45 @@
+# Web framework
+fastapi
+uvicorn[standard]
+pydantic>=2.0
+pydantic-settings
+
+# Database
+sqlalchemy[asyncio]>=2.0
+asyncpg
+alembic
+
+# Job queue
+arq
+
+# LLM
+anthropic
+openai
+
+# Document parsing
+pdfplumber
+pymupdf
+pikepdf
+python-pptx
+openpyxl
+python-docx
+Pillow
+pytesseract
+
+# Supabase
+supabase
+
+# Tracing
+langfuse
+
+# Logging
+structlog
+
+# Testing
+pytest
+pytest-asyncio
+httpx
+
+# Lint / format / type
+ruff
+mypy
