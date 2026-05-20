@@ -8,13 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D1-01` Repo bootstrap
+- [ ] `D1-07` Deploy targets
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `D1-02` Supabase setup
 - [ ] `D1-03` Apply data model migrations
 - [ ] `D1-04` API scaffold
 - [ ] `D1-05` Worker scaffold
@@ -31,19 +30,24 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
-_(none yet)_
+- [x] `D1-06` — Web scaffold — 2026-05-20
+- [x] `D1-05` — Worker scaffold — 2026-05-20
+- [x] `D1-04` — API scaffold — 2026-05-20
+- [x] `D1-03` — Data model migrations — 2026-05-20
+- [x] `D1-02` — Supabase setup — 2026-05-20
+- [x] `D1-01` — Repo bootstrap — 2026-05-20
 
 ---
 
 ## Day-level progress
 
 ### Day 1 — Foundations
-- [ ] `D1-01` Repo bootstrap
-- [ ] `D1-02` Supabase setup
-- [ ] `D1-03` Apply data model migrations
-- [ ] `D1-04` API scaffold
-- [ ] `D1-05` Worker scaffold
-- [ ] `D1-06` Web scaffold
+- [x] `D1-01` Repo bootstrap
+- [x] `D1-02` Supabase setup
+- [x] `D1-03` Apply data model migrations
+- [x] `D1-04` API scaffold
+- [x] `D1-05` Worker scaffold
+- [x] `D1-06` Web scaffold
 - [ ] `D1-07` Deploy targets
 
 ### Day 2 — Backend core + Frontend upload
