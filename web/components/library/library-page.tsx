@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Upload } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Dropzone } from "@/components/upload/dropzone";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
 
@@ -108,6 +109,7 @@ function EmptyState() {
 }
 
 function DocumentCard({ doc }: { doc: DocumentItem }) {
+  const router = useRouter();
   const statusColors: Record<string, string> = {
     uploaded: "bg-yellow-100 text-yellow-800",
     extracting_text: "bg-blue-100 text-blue-800",
@@ -122,7 +124,10 @@ function DocumentCard({ doc }: { doc: DocumentItem }) {
   };
 
   return (
-    <div className="rounded-lg border p-4 hover:bg-accent/50 transition-colors cursor-pointer">
+    <div
+      className="rounded-lg border p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+      onClick={() => router.push(`/document/${doc.id}`)}
+    >
       <p className="font-medium text-sm truncate">{doc.original_filename}</p>
       <div className="mt-2 flex items-center gap-2">
         <span className="text-xs text-muted-foreground uppercase">{doc.file_type}</span>
