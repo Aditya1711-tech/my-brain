@@ -246,9 +246,33 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
         </div>
       </div>
 
-      {doc.failure_reason && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <strong>Error:</strong> {doc.failure_reason}
+      {doc.status === "failed" && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-red-800">
+              <strong>Error:</strong> {doc.failure_reason ?? "Unknown error"}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const apiUrl = process.env.NEXT_PUBLIC_APP_API_URL ?? "";
+                try {
+                  await fetch(`/api/documents/retry`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ document_id: documentId }),
+                  });
+                  loadDocument();
+                } catch {
+                  // Toast error handled by the API
+                }
+              }}
+              className="shrink-0 ml-3"
+            >
+              Retry
+            </Button>
+          </div>
         </div>
       )}
 
@@ -370,52 +394,90 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
         <div className="space-y-6">
           {/* Pipeline Timeline */}
           <div className="rounded-lg border">
-            <div className="border-b p-4">
+            <div className="border-b p-4 flex items-center justify-between">
               <h3 className="font-medium">Pipeline</h3>
+              {doc.status !== "failed" && (
+                <span className="text-xs text-muted-foreground">
+                  {doc.status === "ready"
+                    ? "Complete"
+                    : `${events.filter((e) => e.status === "success").length}/${PIPELINE_STAGES.length} stages`}
+                </span>
+              )}
             </div>
-            <div className="p-4 space-y-3">
-              {PIPELINE_STAGES.map((stage) => {
-                const event = events.find((e) => e.stage === stage.key);
-                const stageStatusIndex = STATUS_ORDER.indexOf(stage.status);
-                const isComplete = event?.status === "success";
-                const isFailed = event?.status === "failure";
-                const isActive =
-                  !isComplete && !isFailed && currentStatusIndex >= stageStatusIndex - 1 && currentStatusIndex < stageStatusIndex;
-
-                return (
-                  <div key={stage.key} className="flex items-center gap-3">
-                    {isComplete ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                    ) : isFailed ? (
-                      <XCircle className="h-4 w-4 text-red-500 shrink-0" />
-                    ) : isActive ? (
-                      <Loader2 className="h-4 w-4 text-blue-500 animate-spin shrink-0" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-muted-foreground/30 shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`text-sm ${isComplete ? "text-foreground" : isActive ? "text-blue-600 font-medium" : "text-muted-foreground"}`}
-                      >
-                        {stage.label}
-                      </p>
-                    </div>
-                    {event?.duration_ms != null && (
-                      <span className="text-xs text-muted-foreground">
-                        {event.duration_ms < 1000
-                          ? `${event.duration_ms}ms`
-                          : `${(event.duration_ms / 1000).toFixed(1)}s`}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-              {doc.status === "ready" && (
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                  <p className="text-sm font-medium text-green-700">Ready</p>
+            <div className="p-4">
+              {/* Progress bar */}
+              {doc.status !== "failed" && (
+                <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mb-4">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ease-out ${
+                      doc.status === "ready" ? "bg-green-500" : "bg-blue-500"
+                    }`}
+                    style={{
+                      width: `${doc.status === "ready" ? 100 : Math.max(5, (events.filter((e) => e.status === "success").length / PIPELINE_STAGES.length) * 100)}%`,
+                    }}
+                  />
                 </div>
               )}
+              <div className="space-y-1">
+                {PIPELINE_STAGES.map((stage, idx) => {
+                  const event = events.find((e) => e.stage === stage.key);
+                  const stageStatusIndex = STATUS_ORDER.indexOf(stage.status);
+                  const isComplete = event?.status === "success";
+                  const isFailed = event?.status === "failure";
+                  const isActive =
+                    !isComplete && !isFailed && currentStatusIndex >= stageStatusIndex - 1 && currentStatusIndex < stageStatusIndex;
+
+                  return (
+                    <div key={stage.key} className="flex items-center gap-3 py-1.5">
+                      <div className="relative flex flex-col items-center">
+                        {isComplete ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 transition-colors duration-300" />
+                        ) : isFailed ? (
+                          <XCircle className="h-4 w-4 text-red-500 shrink-0" />
+                        ) : isActive ? (
+                          <Loader2 className="h-4 w-4 text-blue-500 animate-spin shrink-0" />
+                        ) : (
+                          <Circle className="h-4 w-4 text-muted-foreground/30 shrink-0" />
+                        )}
+                        {/* Connecting line */}
+                        {idx < PIPELINE_STAGES.length - 1 && (
+                          <div
+                            className={`absolute top-5 w-0.5 h-3 ${
+                              isComplete ? "bg-green-300" : "bg-muted"
+                            }`}
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm transition-colors duration-300 ${
+                            isComplete
+                              ? "text-foreground"
+                              : isActive
+                                ? "text-blue-600 font-medium"
+                                : "text-muted-foreground"
+                          }`}
+                        >
+                          {stage.label}
+                        </p>
+                      </div>
+                      {event?.duration_ms != null && (
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {event.duration_ms < 1000
+                            ? `${event.duration_ms}ms`
+                            : `${(event.duration_ms / 1000).toFixed(1)}s`}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+                {doc.status === "ready" && (
+                  <div className="flex items-center gap-3 py-1.5">
+                    <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                    <p className="text-sm font-medium text-green-700">Ready</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -453,6 +515,19 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
             <ExternalLink className="h-4 w-4" />
             Open File
           </a>
+
+          {/* View Trace in Langfuse */}
+          {process.env.NEXT_PUBLIC_LANGFUSE_URL && (
+            <a
+              href={`${process.env.NEXT_PUBLIC_LANGFUSE_URL}/trace/${documentId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-muted transition-colors w-full"
+            >
+              <ExternalLink className="h-4 w-4" />
+              View Trace
+            </a>
+          )}
         </div>
       </div>
 
