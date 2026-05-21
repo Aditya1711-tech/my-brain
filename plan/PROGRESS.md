@@ -8,7 +8,7 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D2-FE-01` App shell + library page
+- [ ] `D3-BE-01` Schema architect + Extractor
 
 ## Up next
 
@@ -30,6 +30,9 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D2-FE-03` — Document grid with Realtime — 2026-05-20
+- [x] `D2-FE-02` — Upload widget — 2026-05-20
+- [x] `D2-FE-01` — App shell + library page — 2026-05-20
 - [x] `D2-BE-04` — Pipeline state machine + worker — 2026-05-20
 - [x] `D2-BE-03` — Classifier agent — 2026-05-20
 - [x] `D2-BE-02` — File-type-specific parsers — 2026-05-20
@@ -60,9 +63,9 @@ _(none)_
 - [x] `D2-BE-02` File-type-specific parsers
 - [x] `D2-BE-03` Classifier agent
 - [x] `D2-BE-04` Pipeline state machine + worker task
-- [ ] `D2-FE-01` App shell + library page
-- [ ] `D2-FE-02` Upload widget
-- [ ] `D2-FE-03` Document grid with Realtime
+- [x] `D2-FE-01` App shell + library page
+- [x] `D2-FE-02` Upload widget
+- [x] `D2-FE-03` Document grid with Realtime
 
 ### Day 3 — Full harness + Knowledge layer
 - [ ] `D3-BE-01` Schema architect + Extractor

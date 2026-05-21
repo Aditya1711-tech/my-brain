@@ -8,34 +8,38 @@ Update after each phase completes or any non-trivial decision is made. Resume se
 
 > What's deployed, what's working, what's mocked.
 
-- **Deployed**: nothing yet
-- **Working locally**: nothing yet
-- **Mocked**: nothing yet
+- **Deployed**: Vercel (web) + Railway (API) — basic scaffold
+- **Working locally**: FastAPI /health, Next.js auth (login/signup/sign-out), library page with upload dropzone
+- **Mocked**: Pipeline stages after classification (stub in orchestrator)
 
 ## Architecture decisions
 
 > Format: short title — date — decision — reasoning.
 
-_(none yet — add as decisions are made)_
+- Next.js 16 proxy — 2026-05-20 — `middleware.ts` renamed to `proxy.ts` per Next.js 16 breaking change. All async APIs (`cookies()`, `params`) must be awaited.
+- Base UI dropdown — 2026-05-20 — shadcn/ui now uses `@base-ui/react` not Radix. No `asChild` prop; Trigger renders children directly.
+- Langfuse init — 2026-05-20 — `Langfuse()` constructor no longer accepts `enabled` kwarg. Check for keys before init, set `.enabled` attribute after.
 
 ## Schema state
 
 > What tables exist and what's been added since the initial migration.
 
-- **Initial migration**: not yet applied
+- **Initial migration**: applied (0001 — all tables from 04-DATA-MODEL.md)
+- **RLS migration**: applied (0002 — per-user policies on all tables)
 - **Pending changes**: none
 
 ## API endpoints implemented
 
 > Append as endpoints land. Format: `METHOD /path — purpose — owner track`.
 
-_(none yet)_
+- `GET /health` — DB connectivity check — D1-04
+- `POST /enqueue` — queue doc for processing (API-key protected) — D1-05
 
 ## Agents implemented
 
 > Per `06-AGENT-HARNESS.md`. Tick when complete.
 
-- [ ] Classifier
+- [x] Classifier
 - [ ] Schema Architect
 - [ ] Extractor
 - [ ] Verifier
@@ -46,7 +50,8 @@ _(none yet)_
 
 > Anything `pip install`ed or `pnpm add`ed that wasn't in the pinned list. Each needs a one-line justification.
 
-_(none yet)_
+- `python-dotenv` — needed for Alembic env.py to load .env from project root
+- `pnpm` — not pre-installed on Windows; had to `npm i -g pnpm`
 
 ## Gotchas discovered
 
