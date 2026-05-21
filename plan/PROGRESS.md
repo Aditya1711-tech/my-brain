@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D4-02` Search endpoint + chip UI
+- [ ] `D4-05` End-to-end integration smoke test
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `D4-03` Single-document chat
-- [ ] `D4-04` Cross-document chat with KG grounding
+- [ ] `D5-01` Pipeline animation polish
+- [ ] `D5-02` Tracing UI link
 
 ## Blockers
 
@@ -26,6 +26,9 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D4-04` — Cross-document chat with KG grounding — 2026-05-21
+- [x] `D4-03` — Single-document chat — 2026-05-21
+- [x] `D4-02` — Search endpoint + chip UI — 2026-05-21
 - [x] `D4-01` — Search resolver — 2026-05-21
 - [x] `D3-FE-02` — Graph view — 2026-05-21
 - [x] `D3-FE-01` — Document detail page — 2026-05-21
@@ -80,9 +83,9 @@ _(none)_
 
 ### Day 4 — Search + Chat + Integration
 - [x] `D4-01` Search resolver
-- [ ] `D4-02` Search endpoint + chip UI
-- [ ] `D4-03` Single-document chat
-- [ ] `D4-04` Cross-document chat with KG grounding
+- [x] `D4-02` Search endpoint + chip UI
+- [x] `D4-03` Single-document chat
+- [x] `D4-04` Cross-document chat with KG grounding
 - [ ] `D4-05` End-to-end integration smoke test
 
 ### Day 5 — Polish + Demo
