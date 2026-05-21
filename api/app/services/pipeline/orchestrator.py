@@ -7,10 +7,15 @@ import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.classifier import ClassifierInput, classifier_agent
+from app.agents.extractor import ExtractorInput, extractor_agent
+from app.agents.schema_architect import SchemaArchitectInput, schema_architect_agent
+from app.agents.verifier import VerifierInput, verifier_agent
+from app.constants import MAX_RETRY_COUNT
 from app.integrations.supabase_client import supabase
 from app.parsing.router import parse_file
 from app.repositories.documents_repo import DocumentsRepo
 from app.repositories.events_repo import EventsRepo
+from app.repositories.extracted_fields_repo import ExtractedFieldCreate, ExtractedFieldsRepo
 from app.services.pipeline.state_machine import STATUS_TO_STAGE, can_transition, next_status_after
 
 logger = structlog.get_logger()
@@ -100,9 +105,14 @@ class PipelineOrchestrator:
             await self._extract_text(doc, trace_id)
         elif stage == "classification":
             await self._classify(doc, trace_id)
+        elif stage == "schema_building":
+            await self._build_schema(doc, trace_id)
+        elif stage == "extraction":
+            await self._extract_fields(doc, trace_id)
+        elif stage == "verification":
+            await self._verify(doc, trace_id)
         else:
-            # Stages D3+ (schema_building, extraction, verification, integration, vectorization)
-            # will be wired in Day 3
+            # Stages D3-BE-03+ (integration, vectorization)
             logger.info("pipeline.stage_stub", stage=stage, doc_id=str(doc.id))
 
     async def _extract_text(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
@@ -191,3 +201,227 @@ class PipelineOrchestrator:
             },
         )
         await self.db.commit()
+
+    async def _build_schema(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run schema architect agent."""
+        from sqlalchemy import text as sql_text
+
+        result = await self.db.execute(
+            sql_text("SELECT raw_text, doc_type, domain FROM documents WHERE id = :doc_id"),
+            {"doc_id": str(doc.id)},
+        )
+        row = result.fetchone()
+        raw_text = row[0] or "" if row else ""  # type: ignore[index]
+        doc_type = row[1] or "unknown" if row else "unknown"  # type: ignore[index]
+        domain = row[2] or "other" if row else "other"  # type: ignore[index]
+
+        input_data = SchemaArchitectInput(
+            document_type=doc_type,
+            domain=domain,
+            text_sample=raw_text[:4000],
+        )
+
+        output = await schema_architect_agent.run(input_data, trace_id=trace_id)
+
+        # Persist schema on document
+        import json
+
+        await self.db.execute(
+            sql_text("""
+                UPDATE documents
+                SET schema_json = :schema_json::jsonb, updated_at = now()
+                WHERE id = :doc_id
+            """),
+            {
+                "schema_json": json.dumps(output.model_dump()),
+                "doc_id": str(doc.id),
+            },
+        )
+        await self.db.commit()
+
+    async def _extract_fields(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run extractor agent and persist extracted fields."""
+        from sqlalchemy import text as sql_text
+        import json
+
+        # Load schema and text
+        result = await self.db.execute(
+            sql_text("SELECT raw_text, schema_json, doc_type FROM documents WHERE id = :doc_id"),
+            {"doc_id": str(doc.id)},
+        )
+        row = result.fetchone()
+        raw_text = row[0] or "" if row else ""  # type: ignore[index]
+        schema_json = row[1] if row else None  # type: ignore[index]
+        doc_type = row[2] or "unknown" if row else "unknown"  # type: ignore[index]
+
+        schema_fields = []
+        if schema_json:
+            schema_data = schema_json if isinstance(schema_json, dict) else json.loads(schema_json)
+            schema_fields = schema_data.get("fields", [])
+
+        # Get page images
+        extraction = getattr(self, "_last_extraction", None)
+        page_images = extraction.page_images if extraction else []
+
+        input_data = ExtractorInput(
+            schema_fields=schema_fields,
+            document_type=doc_type,
+            text=raw_text[:8000],
+            has_images=len(page_images) > 0,
+        )
+
+        if page_images:
+            extractor_agent.set_page_images(page_images)
+
+        output = await extractor_agent.run(input_data, trace_id=trace_id)
+
+        # Build field type lookup from schema
+        field_type_map: dict[str, str] = {}
+        field_entity_map: dict[str, bool] = {}
+        for sf in schema_fields:
+            field_type_map[sf["name"]] = sf.get("field_type", "string")
+            field_entity_map[sf["name"]] = sf.get("is_entity_field", False)
+
+        # Persist extracted fields
+        fields_repo = ExtractedFieldsRepo(self.db)
+        field_creates = [
+            ExtractedFieldCreate(
+                user_id=doc.user_id,
+                document_id=doc.id,
+                field_name=f.name,
+                field_value=f.value,
+                field_type=field_type_map.get(f.name, "string"),
+                is_entity_ref=field_entity_map.get(f.name, False),
+            )
+            for f in output.fields
+        ]
+        await fields_repo.bulk_insert(field_creates)
+
+        # Generate a summary from the extracted fields
+        summary_parts = [f"{f.name}: {f.value}" for f in output.fields if f.value]
+        summary = "; ".join(summary_parts[:10])
+        if summary:
+            await self.db.execute(
+                sql_text("""
+                    UPDATE documents SET summary = :summary, updated_at = now()
+                    WHERE id = :doc_id
+                """),
+                {"summary": summary[:500], "doc_id": str(doc.id)},
+            )
+            await self.db.commit()
+
+        # Store extraction output for verifier
+        self._last_extraction_output = output
+
+    async def _verify(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run verifier, then retry extractor for low-confidence fields."""
+        from sqlalchemy import text as sql_text
+        import json
+
+        fields_repo = ExtractedFieldsRepo(self.db)
+
+        # Load doc data
+        result = await self.db.execute(
+            sql_text("SELECT raw_text, schema_json, doc_type FROM documents WHERE id = :doc_id"),
+            {"doc_id": str(doc.id)},
+        )
+        row = result.fetchone()
+        raw_text = row[0] or "" if row else ""  # type: ignore[index]
+        schema_json = row[1] if row else None  # type: ignore[index]
+        doc_type = row[2] or "unknown" if row else "unknown"  # type: ignore[index]
+
+        schema_fields = []
+        if schema_json:
+            schema_data = schema_json if isinstance(schema_json, dict) else json.loads(schema_json)
+            schema_fields = schema_data.get("fields", [])
+
+        # Get current extracted fields
+        extracted = await fields_repo.get_by_document(doc.id)
+        extracted_dicts = [
+            {"name": f["field_name"], "value": f["field_value"], "type": f["field_type"]}
+            for f in extracted
+        ]
+
+        # Run verifier
+        verifier_input = VerifierInput(
+            document_type=doc_type,
+            schema_fields=schema_fields,
+            extracted_fields=extracted_dicts,
+            text_sample=raw_text[:4000],
+        )
+        verification = await verifier_agent.run(verifier_input, trace_id=trace_id)
+
+        # Update field confidences
+        for fv in verification.fields:
+            await fields_repo.update_verification(
+                document_id=doc.id,
+                field_name=fv.field_name,
+                confidence=fv.confidence,
+                needs_retry=fv.needs_retry,
+                reasoning=fv.reasoning,
+            )
+
+        # Check if retry is needed
+        retry_fields = [
+            fv for fv in verification.fields if fv.needs_retry
+        ]
+        retry_field_names = [fv.field_name for fv in retry_fields]
+
+        # Get current retry counts
+        current_fields = await fields_repo.get_by_document(doc.id)
+        retry_counts = {
+            f["field_name"]: f["retry_count"] for f in current_fields
+        }
+
+        eligible_retries = [
+            name for name in retry_field_names
+            if retry_counts.get(name, 0) < MAX_RETRY_COUNT
+        ]
+
+        if eligible_retries:
+            logger.info(
+                "pipeline.retry_extraction",
+                doc_id=str(doc.id),
+                retry_fields=eligible_retries,
+            )
+
+            feedback = "; ".join(
+                f"{fv.field_name}: {fv.reasoning}"
+                for fv in retry_fields
+                if fv.field_name in eligible_retries
+            )
+
+            # Re-run extractor with retry context
+            extraction = getattr(self, "_last_extraction", None)
+            page_images = extraction.page_images if extraction else []
+
+            retry_input = ExtractorInput(
+                schema_fields=schema_fields,
+                document_type=doc_type,
+                text=raw_text[:8000],
+                has_images=len(page_images) > 0,
+                retry_fields=eligible_retries,
+                retry_feedback=feedback,
+            )
+
+            if page_images:
+                extractor_agent.set_page_images(page_images)
+
+            retry_output = await extractor_agent.run(retry_input, trace_id=trace_id)
+
+            # Update only retried fields
+            for f in retry_output.fields:
+                if f.name in eligible_retries:
+                    await self.db.execute(
+                        sql_text("""
+                            UPDATE extracted_fields
+                            SET field_value = :value, needs_retry = false
+                            WHERE document_id = :doc_id AND field_name = :field_name
+                        """),
+                        {
+                            "value": f.value,
+                            "doc_id": str(doc.id),
+                            "field_name": f.name,
+                        },
+                    )
+            await self.db.commit()
