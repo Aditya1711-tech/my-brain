@@ -8,15 +8,14 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D3-FE-01` Document detail page
+- [ ] `D4-01` Search resolver
 
 ## Up next
 
 > Queue for this session. Take from the top.
-
-- [ ] `D3-FE-02` Graph view
-- [ ] `D4-01` Search resolver
 - [ ] `D4-02` Search endpoint + chip UI
+- [ ] `D4-03` Single-document chat
+- [ ] `D4-04` Cross-document chat with KG grounding
 
 ## Blockers
 
@@ -28,6 +27,8 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D3-FE-02` — Graph view — 2026-05-21
+- [x] `D3-FE-01` — Document detail page — 2026-05-21
 - [x] `D3-BE-04` — Vectorization — 2026-05-21
 - [x] `D3-BE-03` — Knowledge Integrator + entity resolution — 2026-05-21
 - [x] `D3-BE-02` — Verifier + targeted retry — 2026-05-21
@@ -74,8 +75,8 @@ _(none)_
 - [x] `D3-BE-02` Verifier + targeted retry
 - [x] `D3-BE-03` Knowledge Integrator + entity resolution
 - [x] `D3-BE-04` Vectorization
-- [ ] `D3-FE-01` Document detail page
-- [ ] `D3-FE-02` Graph view
+- [x] `D3-FE-01` Document detail page
+- [x] `D3-FE-02` Graph view
 
 ### Day 4 — Search + Chat + Integration
 - [ ] `D4-01` Search resolver
