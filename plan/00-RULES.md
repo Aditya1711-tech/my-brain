@@ -18,6 +18,13 @@ These rules are absolute. Every Claude Code session must respect them.
 - Run linters and formatters before committing.
 - Never leave broken code in `main`. Use feature branches if a task is multi-commit.
 
+### Git rules (CRITICAL — never violate)
+1. **NEVER run git commands directly.** Only output the commands for the user to run. The user executes all git operations.
+2. **No `Co-Authored-By` lines.** Do not include co-author trailers in commit messages.
+3. **Diff before commit commands.** Before suggesting any commit commands, always run `git status` and `git diff --stat` to see the actual uncommitted changes. Build commit commands based on the real diff — never from memory.
+4. **Checkpoint & pause.** When a task (or logical group of tasks) is complete and ready to commit, output the git commands and then **STOP. Do not continue to the next task.** Wait for the user to confirm they have run the commands.
+5. **Verify after commit.** After the user confirms, run `git log --oneline -n <count>` and `git status` to verify everything was committed properly. Only then proceed to the next task.
+
 ### At session end (always)
 1. Update `PROGRESS.md`:
    - Mark completed tasks with `[x]` and a timestamp
