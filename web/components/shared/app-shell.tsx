@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, type KeyboardEvent } from "react";
 import { type User } from "@supabase/supabase-js";
-import { Brain, Search } from "lucide-react";
+import { Brain, Search, X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { UserMenu } from "@/components/shared/user-menu";
 import { Sidebar } from "@/components/shared/sidebar";
@@ -13,6 +15,16 @@ interface AppShellProps {
 }
 
 export function AppShell({ user, children }: AppShellProps) {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && searchTerm.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+      setSearchTerm("");
+    }
+  };
+
   return (
     <div className="flex h-screen flex-col">
       {/* Top bar */}
@@ -27,6 +39,9 @@ export function AppShell({ user, children }: AppShellProps) {
           <Input
             placeholder="Search documents..."
             className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
         </div>
 
