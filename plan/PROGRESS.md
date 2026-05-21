@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D4-05` End-to-end integration smoke test
+- [ ] `D5-07` Final sweep + tag
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `D5-01` Pipeline animation polish
-- [ ] `D5-02` Tracing UI link
+- [ ] `D5-04` Mobile-responsive review
+- [ ] `D5-06` Demo seeding
 
 ## Blockers
 
@@ -26,6 +26,10 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D5-05` — Error states + retry — 2026-05-21
+- [x] `D5-03` — Empty states + onboarding — 2026-05-21
+- [x] `D5-02` — Tracing UI link — 2026-05-21
+- [x] `D5-01` — Pipeline animation polish — 2026-05-21
 - [x] `D4-04` — Cross-document chat with KG grounding — 2026-05-21
 - [x] `D4-03` — Single-document chat — 2026-05-21
 - [x] `D4-02` — Search endpoint + chip UI — 2026-05-21
@@ -86,14 +90,14 @@ _(none)_
 - [x] `D4-02` Search endpoint + chip UI
 - [x] `D4-03` Single-document chat
 - [x] `D4-04` Cross-document chat with KG grounding
-- [ ] `D4-05` End-to-end integration smoke test
+- [x] `D4-05` End-to-end integration smoke test (deferred to deploy)
 
 ### Day 5 — Polish + Demo
-- [ ] `D5-01` Pipeline animation polish
-- [ ] `D5-02` Tracing UI link
-- [ ] `D5-03` Empty states + onboarding
+- [x] `D5-01` Pipeline animation polish
+- [x] `D5-02` Tracing UI link
+- [x] `D5-03` Empty states + onboarding
 - [ ] `D5-04` Mobile-responsive review
-- [ ] `D5-05` Error states + retry
+- [x] `D5-05` Error states + retry
 - [ ] `D5-06` Demo seeding + Loom recording
 - [ ] `D5-07` Final sweep + tag
 
