@@ -8,15 +8,15 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D3-BE-03` Knowledge Integrator + entity resolution
+- [ ] `D3-FE-01` Document detail page
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `D3-BE-04` Vectorization
-- [ ] `D3-FE-01` Document detail page
 - [ ] `D3-FE-02` Graph view
+- [ ] `D4-01` Search resolver
+- [ ] `D4-02` Search endpoint + chip UI
 
 ## Blockers
 
@@ -28,6 +28,8 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D3-BE-04` — Vectorization — 2026-05-21
+- [x] `D3-BE-03` — Knowledge Integrator + entity resolution — 2026-05-21
 - [x] `D3-BE-02` — Verifier + targeted retry — 2026-05-21
 - [x] `D3-BE-01` — Schema architect + Extractor agents — 2026-05-21
 - [x] `D2-FE-03` — Document grid with Realtime — 2026-05-20
@@ -70,8 +72,8 @@ _(none)_
 ### Day 3 — Full harness + Knowledge layer
 - [x] `D3-BE-01` Schema architect + Extractor
 - [x] `D3-BE-02` Verifier + targeted retry
-- [ ] `D3-BE-03` Knowledge Integrator + entity resolution
-- [ ] `D3-BE-04` Vectorization
+- [x] `D3-BE-03` Knowledge Integrator + entity resolution
+- [x] `D3-BE-04` Vectorization
 - [ ] `D3-FE-01` Document detail page
 - [ ] `D3-FE-02` Graph view
 
