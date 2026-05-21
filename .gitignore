@@ -51,3 +51,18 @@ docker-compose.override.yml
 coverage/
 htmlcov/
 .coverage
+
+
+# dependencies
+*/node_modules
+*/.pnp
+
+# testing
+*/coverage
+
+# next.js
+*/.next/
+*/out/
+
+# production
+*/build

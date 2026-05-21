@@ -30,7 +30,7 @@ pytesseract
 supabase
 
 # Tracing
-langfuse
+langfuse>=2,<3
 
 # Env
 python-dotenv
