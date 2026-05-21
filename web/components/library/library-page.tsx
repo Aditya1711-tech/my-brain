@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Upload } from "lucide-react";
+import { Upload, CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Dropzone } from "@/components/upload/dropzone";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
@@ -100,46 +100,106 @@ function EmptyState() {
       <div className="mx-auto rounded-full bg-muted p-6 mb-4 w-fit">
         <Upload className="h-10 w-10 text-muted-foreground" />
       </div>
-      <h2 className="text-xl font-semibold">Your library is empty</h2>
+      <h2 className="text-xl font-semibold">Welcome to My Brain</h2>
       <p className="mt-2 max-w-sm mx-auto text-muted-foreground">
-        Drop files below or click to browse. We support PDF, images, DOCX, XLSX, PPTX, CSV, and TXT.
+        Upload your first document to get started. We&apos;ll automatically extract fields,
+        build your knowledge graph, and enable search and chat across all your documents.
+      </p>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Supports PDF, images, DOCX, XLSX, PPTX, CSV, and TXT
       </p>
     </div>
   );
 }
 
+const PIPELINE_STAGES = [
+  "uploaded",
+  "extracting_text",
+  "classified",
+  "schema_built",
+  "extracted",
+  "verified",
+  "integrated",
+  "vectorized",
+  "ready",
+];
+
+const STAGE_LABELS: Record<string, string> = {
+  uploaded: "Queued",
+  extracting_text: "Extracting text",
+  classified: "Classifying",
+  schema_built: "Building schema",
+  extracted: "Extracting fields",
+  verified: "Verifying",
+  integrated: "Integrating",
+  vectorized: "Vectorizing",
+  ready: "Ready",
+  failed: "Failed",
+};
+
 function DocumentCard({ doc }: { doc: DocumentItem }) {
   const router = useRouter();
-  const statusColors: Record<string, string> = {
-    uploaded: "bg-yellow-100 text-yellow-800",
-    extracting_text: "bg-blue-100 text-blue-800",
-    classified: "bg-blue-100 text-blue-800",
-    schema_built: "bg-blue-100 text-blue-800",
-    extracted: "bg-blue-100 text-blue-800",
-    verified: "bg-blue-100 text-blue-800",
-    integrated: "bg-blue-100 text-blue-800",
-    vectorized: "bg-blue-100 text-blue-800",
-    ready: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
-  };
+  const isProcessing = !["ready", "failed", "uploaded"].includes(doc.status);
+  const isReady = doc.status === "ready";
+  const isFailed = doc.status === "failed";
+  const currentIdx = PIPELINE_STAGES.indexOf(doc.status);
+  const totalStages = PIPELINE_STAGES.length - 1; // exclude "ready" from progress
+  const progress = isReady ? 100 : Math.max(0, (currentIdx / totalStages) * 100);
 
   return (
     <div
-      className="rounded-lg border p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+      className="rounded-lg border p-4 hover:bg-accent/50 transition-colors cursor-pointer group"
       onClick={() => router.push(`/document/${doc.id}`)}
     >
       <p className="font-medium text-sm truncate">{doc.original_filename}</p>
+
+      {/* Pipeline progress bar */}
+      {(isProcessing || isReady) && (
+        <div className="mt-2 space-y-1">
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                isReady ? "bg-green-500" : "bg-blue-500"
+              }`}
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            {isProcessing && (
+              <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+            )}
+            {isReady && (
+              <CheckCircle2 className="h-3 w-3 text-green-500" />
+            )}
+            <span className="text-xs text-muted-foreground">
+              {STAGE_LABELS[doc.status] ?? doc.status}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {isFailed && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <XCircle className="h-3 w-3 text-red-500" />
+          <span className="text-xs text-red-600">Failed</span>
+        </div>
+      )}
+
+      {doc.status === "uploaded" && (
+        <div className="mt-2 flex items-center gap-1.5">
+          <div className="h-3 w-3 rounded-full bg-yellow-400 animate-pulse" />
+          <span className="text-xs text-muted-foreground">Queued</span>
+        </div>
+      )}
+
       <div className="mt-2 flex items-center gap-2">
         <span className="text-xs text-muted-foreground uppercase">{doc.file_type}</span>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[doc.status] ?? "bg-gray-100 text-gray-800"}`}
-        >
-          {doc.status}
-        </span>
+        {doc.doc_type && (
+          <span className="text-xs text-muted-foreground">
+            {doc.doc_type.replace(/_/g, " ")}
+          </span>
+        )}
       </div>
-      {doc.doc_type && (
-        <p className="mt-1 text-xs text-muted-foreground">{doc.doc_type.replace(/_/g, " ")}</p>
-      )}
     </div>
   );
 }
