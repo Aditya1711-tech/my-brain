@@ -62,7 +62,7 @@ class EntitiesRepo:
         result = await self.db.execute(
             text("""
                 INSERT INTO entities (user_id, entity_type, canonical_name, aliases, attributes, identifiers)
-                VALUES (:user_id, :entity_type, :canonical_name, :aliases::jsonb, :attributes::jsonb, :identifiers::jsonb)
+                VALUES (:user_id, :entity_type, :canonical_name, CAST(:aliases AS jsonb), CAST(:attributes AS jsonb), CAST(:identifiers AS jsonb))
                 RETURNING id
             """),
             {
@@ -86,7 +86,7 @@ class EntitiesRepo:
                 UPDATE entities
                 SET aliases = (
                     SELECT jsonb_agg(DISTINCT val)
-                    FROM jsonb_array_elements_text(aliases || :new_aliases::jsonb) AS val
+                    FROM jsonb_array_elements_text(aliases || CAST(:new_aliases AS jsonb)) AS val
                 ),
                 updated_at = now()
                 WHERE id = :entity_id
@@ -104,7 +104,7 @@ class EntitiesRepo:
         await self.db.execute(
             text("""
                 UPDATE entities
-                SET identifiers = identifiers || :new_identifiers::jsonb,
+                SET identifiers = identifiers || CAST(:new_identifiers AS jsonb),
                     updated_at = now()
                 WHERE id = :entity_id
             """),

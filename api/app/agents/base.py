@@ -60,8 +60,11 @@ class Agent(Generic[TIn, TOut]):
         span = None
 
         if trace_id and langfuse.enabled:
-            trace = langfuse.trace(id=trace_id, name=f"pipeline-{trace_id}")
-            span = trace.span(name=self.name, input=input_data.model_dump())
+            try:
+                trace = langfuse.trace(id=trace_id, name=f"pipeline-{trace_id}")
+                span = trace.span(name=self.name, input=input_data.model_dump())
+            except (AttributeError, Exception) as exc:
+                logger.debug("langfuse_tracing_unavailable", error=str(exc))
 
         start = time.monotonic()
 

@@ -1,3 +1,4 @@
+import json
 from uuid import UUID
 
 from sqlalchemy import text
@@ -24,14 +25,14 @@ class EventsRepo:
                 INSERT INTO document_pipeline_events
                     (user_id, document_id, stage, status, details, trace_id, duration_ms)
                 VALUES
-                    (:user_id, :document_id, :stage, :status, :details::jsonb, :trace_id, :duration_ms)
+                    (:user_id, :document_id, :stage, :status, CAST(:details AS jsonb), :trace_id, :duration_ms)
             """),
             {
                 "user_id": str(user_id),
                 "document_id": str(document_id),
                 "stage": stage,
                 "status": status,
-                "details": "{}" if details is None else str(details).replace("'", '"'),
+                "details": json.dumps(details or {}),
                 "trace_id": trace_id,
                 "duration_ms": duration_ms,
             },

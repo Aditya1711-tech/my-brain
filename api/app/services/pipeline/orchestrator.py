@@ -6,6 +6,7 @@ from uuid import UUID
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.agents.classifier import ClassifierInput, classifier_agent
 from app.agents.extractor import ExtractorInput, extractor_agent
 from app.agents.schema_architect import SchemaArchitectInput, schema_architect_agent
@@ -124,15 +125,8 @@ class PipelineOrchestrator:
         """Download file from Supabase storage and parse it."""
         logger.info("pipeline.extracting_text", doc_id=str(doc.id), storage_path=doc.storage_path)
 
-        file_bytes = supabase.storage.from_(
-            doc.storage_path.split("/")[0]
-            if "/" in doc.storage_path
-            else "user-uploads"
-        ).download(
-            "/".join(doc.storage_path.split("/")[1:])
-            if "/" in doc.storage_path
-            else doc.storage_path
-        )
+        bucket = settings.supabase_storage_bucket
+        file_bytes = supabase.storage.from_(bucket).download(doc.storage_path)
 
         extraction = parse_file(file_bytes, doc.mime_type, doc.original_filename)
 
@@ -234,7 +228,7 @@ class PipelineOrchestrator:
         await self.db.execute(
             sql_text("""
                 UPDATE documents
-                SET schema_json = :schema_json::jsonb, updated_at = now()
+                SET schema_json = CAST(:schema_json AS jsonb), updated_at = now()
                 WHERE id = :doc_id
             """),
             {

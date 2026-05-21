@@ -88,7 +88,7 @@ async def vectorize_document(db: AsyncSession, doc_id: UUID, user_id: UUID) -> N
         await db.execute(
             sql_text("""
                 INSERT INTO chunks (user_id, document_id, chunk_index, text, embedding)
-                VALUES (:user_id, :document_id, :chunk_index, :text, :embedding::vector)
+                VALUES (:user_id, :document_id, :chunk_index, :text, CAST(:embedding AS vector))
             """),
             {
                 "user_id": str(user_id),
