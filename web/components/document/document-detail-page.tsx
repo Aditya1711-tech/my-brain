@@ -12,9 +12,11 @@ import {
   XCircle,
   Loader2,
   Pencil,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
+import { ChatPanel } from "@/components/chat/chat-panel";
 
 interface DocumentDetail {
   id: string;
@@ -93,6 +95,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const [loading, setLoading] = useState(true);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   const loadDocument = useCallback(async () => {
     const supabase = createClient();
@@ -230,7 +233,17 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
             {doc.language && <span>{doc.language}</span>}
           </div>
         </div>
-        <StatusBadge status={doc.status} />
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setChatOpen(!chatOpen)}
+          >
+            <MessageSquare className="h-4 w-4 mr-1" />
+            Chat
+          </Button>
+          <StatusBadge status={doc.status} />
+        </div>
       </div>
 
       {doc.failure_reason && (
@@ -442,6 +455,25 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
           </a>
         </div>
       </div>
+
+      {/* Chat Side Panel */}
+      {chatOpen && (
+        <div className="fixed top-14 right-0 w-96 h-[calc(100vh-3.5rem)] border-l bg-background z-30 flex flex-col">
+          <div className="flex items-center justify-between border-b p-3">
+            <h3 className="font-medium text-sm">Chat with this document</h3>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => setChatOpen(false)}
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <ChatPanel documentId={documentId} scope="document" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
