@@ -16,7 +16,9 @@ from app.parsing.router import parse_file
 from app.repositories.documents_repo import DocumentsRepo
 from app.repositories.events_repo import EventsRepo
 from app.repositories.extracted_fields_repo import ExtractedFieldCreate, ExtractedFieldsRepo
+from app.services.knowledge.entity_resolver import EntityResolver
 from app.services.pipeline.state_machine import STATUS_TO_STAGE, can_transition, next_status_after
+from app.services.pipeline.vectorizer import vectorize_document
 
 logger = structlog.get_logger()
 
@@ -111,8 +113,11 @@ class PipelineOrchestrator:
             await self._extract_fields(doc, trace_id)
         elif stage == "verification":
             await self._verify(doc, trace_id)
+        elif stage == "integration":
+            await self._integrate(doc, trace_id)
+        elif stage == "vectorization":
+            await self._vectorize(doc, trace_id)
         else:
-            # Stages D3-BE-03+ (integration, vectorization)
             logger.info("pipeline.stage_stub", stage=stage, doc_id=str(doc.id))
 
     async def _extract_text(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
@@ -425,3 +430,65 @@ class PipelineOrchestrator:
                         },
                     )
             await self.db.commit()
+
+    async def _integrate(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run knowledge integration — entity resolution, facts, relationships."""
+        from sqlalchemy import text as sql_text
+        import json
+
+        fields_repo = ExtractedFieldsRepo(self.db)
+
+        # Load doc data
+        result = await self.db.execute(
+            sql_text("SELECT raw_text, schema_json, doc_type FROM documents WHERE id = :doc_id"),
+            {"doc_id": str(doc.id)},
+        )
+        row = result.fetchone()
+        doc_type = row[2] or "unknown" if row else "unknown"  # type: ignore[index]
+
+        # Get extracted fields
+        extracted = await fields_repo.get_by_document(doc.id)
+        extracted_dicts = [
+            {"name": f["field_name"], "value": f["field_value"], "type": f["field_type"]}
+            for f in extracted
+        ]
+
+        # Build detected entities from extractor output or from entity-ref fields
+        extraction_output = getattr(self, "_last_extraction_output", None)
+        detected_entities: list[dict] = []
+
+        if extraction_output and extraction_output.detected_entities:
+            detected_entities = [e.model_dump() for e in extraction_output.detected_entities]
+        else:
+            # Fallback: build entities from fields marked as entity refs
+            entity_fields = [f for f in extracted if f.get("is_entity_ref") and f["field_value"]]
+            seen_names: set[str] = set()
+            for ef in entity_fields:
+                name = ef["field_value"]
+                if name not in seen_names:
+                    seen_names.add(name)
+                    detected_entities.append({
+                        "name": name,
+                        "type": "person",
+                        "role": "subject",
+                        "fields": {},
+                    })
+
+        if not detected_entities:
+            logger.info("pipeline.integration_skip_no_entities", doc_id=str(doc.id))
+            return
+
+        # Run entity resolution + persist
+        resolver = EntityResolver(self.db)
+        await resolver.resolve_and_persist(
+            user_id=doc.user_id,
+            document_id=doc.id,
+            document_type=doc_type,
+            detected_entities=detected_entities,
+            extracted_fields=extracted_dicts,
+            trace_id=trace_id,
+        )
+
+    async def _vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Chunk text and generate embeddings."""
+        await vectorize_document(self.db, doc.id, doc.user_id)
