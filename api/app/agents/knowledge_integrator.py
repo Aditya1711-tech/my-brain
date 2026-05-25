@@ -46,6 +46,3 @@ class KnowledgeIntegratorAgent(Agent[KnowledgeIntegratorInput, IntegrationOutput
     model = MODEL_KNOWLEDGE_INTEGRATOR
     prompt_file = "knowledge_integrator.md"
     output_schema = IntegrationOutput
-
-
-knowledge_integrator_agent = KnowledgeIntegratorAgent()

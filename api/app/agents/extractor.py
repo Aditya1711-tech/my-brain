@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 from app.agents.base import Agent
 from app.constants import MODEL_EXTRACTOR
-from app.integrations.anthropic_client import client as anthropic_client
 
 
 class ExtractedField(BaseModel):
@@ -42,13 +41,6 @@ class ExtractorAgent(Agent[ExtractorInput, ExtractionOutput]):
     prompt_file = "extractor.md"
     output_schema = ExtractionOutput
 
-    def __init__(self) -> None:
-        self._page_images: list[bytes] = []
-
-    def set_page_images(self, images: list[bytes]) -> None:
-        """Set page images for multimodal extraction."""
-        self._page_images = images
-
     @staticmethod
     def _detect_media_type(data: bytes) -> str:
         if data[:3] == b"\xff\xd8\xff":
@@ -61,13 +53,14 @@ class ExtractorAgent(Agent[ExtractorInput, ExtractionOutput]):
             return "image/gif"
         return "image/png"
 
-    def _build_messages(self, input_data: ExtractorInput) -> list[dict]:
-        """Build messages — include images if available."""
+    def _build_messages(self, input_data: ExtractorInput, **kwargs: object) -> list[dict]:
+        """Build messages — include images if provided via page_images kwarg."""
         system_prompt = self._load_prompt()
         content: list[dict] = []
+        page_images: list[bytes] = kwargs.get("page_images") or []  # type: ignore[assignment]
 
         # Add page images (up to 5 pages)
-        for img in self._page_images[:5]:
+        for img in page_images[:5]:
             b64 = base64.b64encode(img).decode("utf-8")
             content.append({
                 "type": "image",
@@ -101,6 +94,3 @@ class ExtractorAgent(Agent[ExtractorInput, ExtractionOutput]):
         content.append({"type": "text", "text": "\n".join(prompt_parts)})
 
         return [{"role": "user", "content": content}]
-
-
-extractor_agent = ExtractorAgent()

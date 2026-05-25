@@ -5,7 +5,6 @@ from pydantic import BaseModel
 
 from app.agents.base import Agent
 from app.constants import MODEL_CLASSIFIER
-from app.integrations.anthropic_client import client as anthropic_client
 
 
 class EntityHint(BaseModel):
@@ -39,13 +38,6 @@ class ClassifierAgent(Agent[ClassifierInput, ClassifierOutput]):
     prompt_file = "classifier.md"
     output_schema = ClassifierOutput
 
-    def __init__(self) -> None:
-        self._page_image: bytes | None = None
-
-    def set_page_image(self, image_bytes: bytes) -> None:
-        """Set first-page image for multimodal classification."""
-        self._page_image = image_bytes
-
     @staticmethod
     def _detect_media_type(data: bytes) -> str:
         if data[:3] == b"\xff\xd8\xff":
@@ -58,19 +50,19 @@ class ClassifierAgent(Agent[ClassifierInput, ClassifierOutput]):
             return "image/gif"
         return "image/png"
 
-    def _build_messages(self, input_data: ClassifierInput) -> list[dict]:
-        """Build messages — include image if available."""
+    def _build_messages(self, input_data: ClassifierInput, **kwargs: object) -> list[dict]:
+        """Build messages — include image if provided via page_image kwarg."""
         system_prompt = self._load_prompt()
         content: list[dict] = []
+        page_image: bytes | None = kwargs.get("page_image")  # type: ignore[assignment]
 
-        # Add image if available
-        if self._page_image:
-            b64 = base64.b64encode(self._page_image).decode("utf-8")
+        if page_image:
+            b64 = base64.b64encode(page_image).decode("utf-8")
             content.append({
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": self._detect_media_type(self._page_image),
+                    "media_type": self._detect_media_type(page_image),
                     "data": b64,
                 },
             })
@@ -81,6 +73,3 @@ class ClassifierAgent(Agent[ClassifierInput, ClassifierOutput]):
         })
 
         return [{"role": "user", "content": content}]
-
-
-classifier_agent = ClassifierAgent()

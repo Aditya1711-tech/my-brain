@@ -35,6 +35,3 @@ class SchemaArchitectAgent(Agent[SchemaArchitectInput, SchemaOutput]):
     model = MODEL_SCHEMA_ARCHITECT
     prompt_file = "schema_architect.md"
     output_schema = SchemaOutput
-
-
-schema_architect_agent = SchemaArchitectAgent()

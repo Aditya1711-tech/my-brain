@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.knowledge_integrator import (
     IntegrationOutput,
+    KnowledgeIntegratorAgent,
     KnowledgeIntegratorInput,
-    knowledge_integrator_agent,
 )
 from app.repositories.entities_repo import EntitiesRepo
 from app.repositories.facts_repo import FactsRepo
@@ -72,7 +72,7 @@ class EntityResolver:
             extracted_fields=extracted_fields,
             existing_entities=existing_entities,
         )
-        output = await knowledge_integrator_agent.run(ki_input, trace_id=trace_id)
+        output = await KnowledgeIntegratorAgent().run(ki_input, trace_id=trace_id)
 
         # Step 4: Persist resolutions — build entity ID map
         entity_id_map: dict[str, str] = {}  # detected_name → actual entity UUID

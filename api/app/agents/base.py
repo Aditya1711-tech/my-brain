@@ -47,14 +47,14 @@ class Agent(Generic[TIn, TOut]):
             "input_schema": schema,
         }
 
-    def _build_messages(self, input_data: TIn) -> list[dict]:
+    def _build_messages(self, input_data: TIn, **kwargs: object) -> list[dict]:
         """Build the messages array. Override for multimodal agents."""
         system_prompt = self._load_prompt()
         return [
             {"role": "user", "content": f"{system_prompt}\n\n---\n\nDocument data:\n{input_data.model_dump_json(indent=2)}"},
         ]
 
-    async def run(self, input_data: TIn, *, trace_id: str | None = None) -> TOut:
+    async def run(self, input_data: TIn, *, trace_id: str | None = None, **kwargs: object) -> TOut:
         """Execute the agent: prompt → LLM → validate → return."""
         trace = None
         span = None
@@ -69,7 +69,7 @@ class Agent(Generic[TIn, TOut]):
         start = time.monotonic()
 
         try:
-            messages = self._build_messages(input_data)
+            messages = self._build_messages(input_data, **kwargs)
             response = await anthropic_client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
