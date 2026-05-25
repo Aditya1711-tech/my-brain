@@ -411,7 +411,9 @@ class PipelineOrchestrator:
                     await self.db.execute(
                         sql_text("""
                             UPDATE extracted_fields
-                            SET field_value = :value, needs_retry = false
+                            SET field_value = :value,
+                                needs_retry = false,
+                                retry_count = retry_count + 1
                             WHERE document_id = :doc_id AND field_name = :field_name
                         """),
                         {
