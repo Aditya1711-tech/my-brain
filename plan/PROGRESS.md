@@ -8,13 +8,14 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN.m
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `D5-07` Final sweep + tag
+**Phase 1 complete.** Tagged `v1.0-phase-1`.
 
 ## Up next
 
-> Queue for this session. Take from the top.
+> Phase 1.5 backlog (see KNOWLEDGE.md).
 - [ ] `D5-04` Mobile-responsive review
-- [ ] `D5-06` Demo seeding
+- [ ] `D5-06` Demo seeding + Loom recording
+- [ ] `D4-05` End-to-end integration smoke test
 
 ## Blockers
 
@@ -26,6 +27,7 @@ _(none)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older entries to KNOWLEDGE.md if it gets long.
 
+- [x] `D5-07` — Final sweep + tag v1.0-phase-1 — 2026-05-25
 - [x] `D5-05` — Error states + retry — 2026-05-21
 - [x] `D5-03` — Empty states + onboarding — 2026-05-21
 - [x] `D5-02` — Tracing UI link — 2026-05-21
@@ -99,7 +101,7 @@ _(none)_
 - [ ] `D5-04` Mobile-responsive review
 - [x] `D5-05` Error states + retry
 - [ ] `D5-06` Demo seeding + Loom recording
-- [ ] `D5-07` Final sweep + tag
+- [x] `D5-07` Final sweep + tag
 
 ---
 
@@ -107,6 +109,6 @@ _(none)_
 
 > Append a one-liner at end of each session. Helps recover context.
 
-_(none yet)_
+- `2026-05-25 | Final sweep, KNOWLEDGE.md update, tag v1.0-phase-1 | D5-07 | Phase 1.5 backlog`
 
 Format: `YYYY-MM-DD HH:MM | session description | tasks closed | next up`
