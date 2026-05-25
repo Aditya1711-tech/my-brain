@@ -8,16 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `P1.5-D1-SETUP-01` Bootstrap phase 1.5 branch and fixture directory
+- [ ] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01)
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `P1.5-D1-BENCH-01` Baseline benchmark
-- [ ] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01)
-- [ ] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01)
-- [ ] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01)
 - [ ] `P1.5-D1-SETUP-02` Test harness scaffolding
 - [ ] `P1.5-D1-SETUP-03` Merge + tag phase-1.5-d1-end
 
@@ -37,17 +33,20 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
-_(none yet)_
+- [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
+- [x] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01) — 2026-05-25
+- [x] `P1.5-D1-BENCH-01` Baseline benchmark — 2026-05-25
+- [x] `P1.5-D1-SETUP-01` Bootstrap phase 1.5 branch + structure — 2026-05-25
 
 ---
 
 ## Phase 1.5 task tracker
 
 ### Day 1 — Foundations, defects, baseline
-- [ ] `P1.5-D1-SETUP-01` Bootstrap phase 1.5 branch + structure
-- [ ] `P1.5-D1-BENCH-01` Baseline benchmark
-- [ ] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01)
-- [ ] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01)
+- [x] `P1.5-D1-SETUP-01` Bootstrap phase 1.5 branch + structure — 2026-05-25
+- [x] `P1.5-D1-BENCH-01` Baseline benchmark — 2026-05-25
+- [x] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01) — 2026-05-25
+- [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
 - [ ] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01)
 - [ ] `P1.5-D1-SETUP-02` Test harness scaffolding
 - [ ] `P1.5-D1-SETUP-03` Day 1 merge + tag
@@ -96,8 +95,8 @@ _(none yet)_
 Maps defect IDs to status. A defect is "closed" only when its regression test exists.
 
 ### CRIT
-- [ ] `D-AGENT-01` Agent singleton concurrency bug
-- [ ] `D-RETRY-01` retry_count increments on first verifier pass
+- [x] `D-AGENT-01` Agent singleton concurrency bug — fixed 2026-05-25 (regression test pending SETUP-02)
+- [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25 (regression test pending SETUP-02)
 - [ ] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships
 - [ ] `D-AUTH-01` No JWT verification on /search and /chat
 - [ ] `D-GROUND-01` No groundedness check
@@ -130,6 +129,6 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 
 > Append a one-liner at end of each session. Helps recover context.
 
-_(none yet)_
-
 Format: `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up`
+
+2026-05-25 | day-1 | Bootstrap + baseline + D-AGENT-01 singleton fix + D-RETRY-01 retry_count fix | SETUP-01, BENCH-01, HARNESS-01, HARNESS-02 | HARNESS-03 (LLM retry with backoff)

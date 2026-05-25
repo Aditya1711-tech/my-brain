@@ -34,19 +34,25 @@ These rules are absolute for Phase 1.5. Where they conflict with Phase 1's `/pla
 ### Git rules (CRITICAL — never violate)
 1. **NEVER run git commands directly.** Only output the commands for the user to run. The user executes all git operations.
 2. **Diff before commit commands.** Before suggesting any commit commands, always run `git status` and `git diff --stat` to see the actual uncommitted changes. Build commit commands based on the real diff — never from memory.
-3. **Checkpoint & pause.** When a task (or logical group of tasks) is complete and ready to commit, output the git commands and then **STOP. Do not continue to the next task.** Wait for the user to confirm they have run the commands.
-4. **Verify after commit.** After the user confirms, run `git log --oneline -n <count>` and `git status` to verify everything was committed properly. Only then proceed to the next task.
+3. **Update PROGRESS-1.5.md BEFORE outputting commit commands.** When a task completes, first: (a) mark it `[x]` with `YYYY-MM-DD HH:MM` in both the "Phase 1.5 task tracker" table AND "Recently completed"; (b) move "Current" to the next task in the queue; (c) mark any resolved defect `[x]` in the "Defects tracker" section. Only then output git commit commands.
+4. **Checkpoint & pause.** After updating PROGRESS-1.5.md and outputting git commands, **STOP. Do not continue to the next task.** Wait for the user to confirm they have run the commands.
+5. **Verify after commit.** After the user confirms, run `git log --oneline -n <count>` and `git status` to verify everything was committed properly. Only then proceed to the next task.
 
 ### At session end (always)
 1. Update `PROGRESS-1.5.md`:
-   - Mark completed tasks with `[x]` and timestamp
+   - Mark completed tasks with `[x]` and timestamp in the "Phase 1.5 task tracker" table
+   - Add completed tasks to "Recently completed" list (last 10; prune oldest to `KNOWLEDGE-1.5.md`)
    - Move next task to "Current"
+   - Update "Defects tracker" — mark any closed defects `[x]`
    - Add any new blockers under "Blockers"
+   - Append one-liner to "Session log": `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up`
 2. If a milestone or day completes, update `KNOWLEDGE-1.5.md`:
    - New decisions made (with reasoning)
    - New gotchas discovered
    - Updated performance numbers
    - Updated test fixture list
+   - Update "Phase 1.5 current state" summary
+   - Update "Agents and services added" and "API endpoints added or changed" if applicable
 3. Commit doc updates separately from code: `docs(progress,phase-1.5): close <task-id>`
 
 ## Branching strategy

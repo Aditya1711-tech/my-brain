@@ -8,9 +8,11 @@ Update after each milestone or non-trivial decision. Sessions resume by reading 
 
 > What's deployed for Phase 1.5, what's working, what's pending.
 
-- **Status:** Not started
+- **Status:** Day 1 in progress (4/7 tasks done)
 - **Deployed:** Phase 1 (`v1.0-phase-1`) on main + production
-- **In progress:** Bootstrap
+- **Done:** SETUP-01 (bootstrap), BENCH-01 (baseline), HARNESS-01 (D-AGENT-01 singleton fix), HARNESS-02 (D-RETRY-01 retry_count fix)
+- **In progress:** HARNESS-03 (LLM API retry with backoff)
+- **Remaining Day 1:** SETUP-02 (test harness), SETUP-03 (merge + tag)
 
 ## Decisions made
 
