@@ -42,7 +42,27 @@ Reasoning: /enqueue is server-to-server from Next.js BFF; /search and /chat coul
 
 ### Baseline (pre-Phase-1.5)
 
-_To be captured by `P1.5-D1-BENCH-01`._
+Captured 2026-05-25, 5 documents (passport ×2, aadhaar ×2, trade licence ×1).
+
+| Metric | p50 | p95 | Mean | SLO target |
+|--------|-----|-----|------|------------|
+| **Pipeline total (sum of stages)** | **112.4 s** | **198.0 s** | **132.7 s** | ≤ 25 s p50 / ≤ 45 s p95 |
+| Text Extraction | 3.5 s | 40.5 s | 10.0 s | ≤ 1.5 s / ≤ 3 s |
+| Classification | 5.5 s | 6.3 s | 5.2 s | (part of parallel group) |
+| Schema Building | 11.7 s | 14.4 s | 12.0 s | ≤ 3 s / ≤ 6 s |
+| Extraction | 25.3 s | 28.6 s | 22.9 s | ≤ 5 s / ≤ 12 s |
+| Verification | 33.3 s | 46.2 s | 33.2 s | ≤ 3 s / ≤ 6 s |
+| Integration | 42.6 s | 48.2 s | 35.0 s | ≤ 5 s / ≤ 10 s |
+| Vectorization | 3.9 s | 6.9 s | 4.5 s | (part of parallel group) |
+
+**Key findings:**
+- Every stage exceeds its SLO. Total pipeline is ~4.5× over target.
+- Integration (35s mean) and Verification (33.2s mean) are the top bottlenecks.
+- Extraction (22.9s mean) is 4× over target — multimodal Sonnet call dominates.
+- Schema Building (12s mean) is 4× over target.
+- Text Extraction is fast for digital PDFs (2-5s) but 69.7s for the scanned Trade Licence.
+- Classification is the cheapest LLM stage at ~5s.
+- Wall-clock times showed large gaps vs sum for some docs, indicating queue or retry delays.
 
 ### After Day 1
 _TBD_
