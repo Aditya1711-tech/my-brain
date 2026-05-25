@@ -49,6 +49,18 @@ class ExtractorAgent(Agent[ExtractorInput, ExtractionOutput]):
         """Set page images for multimodal extraction."""
         self._page_images = images
 
+    @staticmethod
+    def _detect_media_type(data: bytes) -> str:
+        if data[:3] == b"\xff\xd8\xff":
+            return "image/jpeg"
+        if data[:8] == b"\x89PNG\r\n\x1a\n":
+            return "image/png"
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            return "image/webp"
+        if data[:3] == b"GIF":
+            return "image/gif"
+        return "image/png"
+
     def _build_messages(self, input_data: ExtractorInput) -> list[dict]:
         """Build messages — include images if available."""
         system_prompt = self._load_prompt()
@@ -61,7 +73,7 @@ class ExtractorAgent(Agent[ExtractorInput, ExtractionOutput]):
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/png",
+                    "media_type": self._detect_media_type(img),
                     "data": b64,
                 },
             })

@@ -46,6 +46,18 @@ class ClassifierAgent(Agent[ClassifierInput, ClassifierOutput]):
         """Set first-page image for multimodal classification."""
         self._page_image = image_bytes
 
+    @staticmethod
+    def _detect_media_type(data: bytes) -> str:
+        if data[:3] == b"\xff\xd8\xff":
+            return "image/jpeg"
+        if data[:8] == b"\x89PNG\r\n\x1a\n":
+            return "image/png"
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            return "image/webp"
+        if data[:3] == b"GIF":
+            return "image/gif"
+        return "image/png"
+
     def _build_messages(self, input_data: ClassifierInput) -> list[dict]:
         """Build messages — include image if available."""
         system_prompt = self._load_prompt()
@@ -58,7 +70,7 @@ class ClassifierAgent(Agent[ClassifierInput, ClassifierOutput]):
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": "image/png",
+                    "media_type": self._detect_media_type(self._page_image),
                     "data": b64,
                 },
             })
