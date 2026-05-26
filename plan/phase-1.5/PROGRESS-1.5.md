@@ -8,13 +8,18 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-_(Day 1 complete — next session starts Day 2)_
+- [ ] `P1.5-D2-HARNESS-05` Groundedness module (D-GROUND-01)
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `P1.5-D2-HARNESS-04` Schema migration for new fields
+- [ ] `P1.5-D2-HARNESS-06` Verifier schema updates
+- [ ] `P1.5-D2-HARNESS-06` Verifier schema updates
+- [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
+- [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
+- [ ] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01)
+- [ ] `P1.5-D2-BENCH-02` Mid-phase benchmark + merge
 
 ## Blockers
 
@@ -32,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D2-HARNESS-04` Schema migration (groundedness + retry budget + processing_state) — 2026-05-26
 - [x] `P1.5-D1-SETUP-03` Day 1 merge + tag phase-1.5-d1-end — 2026-05-26
 - [x] `P1.5-D1-SETUP-02` Test harness scaffolding (conftest + smoke test) — 2026-05-26
 - [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
@@ -54,7 +60,7 @@ _(none yet)_
 - [x] `P1.5-D1-SETUP-03` Day 1 merge + tag — 2026-05-26
 
 ### Day 2 — Self-healing harness core
-- [ ] `P1.5-D2-HARNESS-04` Schema migration for new fields
+- [x] `P1.5-D2-HARNESS-04` Schema migration for new fields — 2026-05-26
 - [ ] `P1.5-D2-HARNESS-05` Groundedness module (D-GROUND-01)
 - [ ] `P1.5-D2-HARNESS-06` Verifier schema updates
 - [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
