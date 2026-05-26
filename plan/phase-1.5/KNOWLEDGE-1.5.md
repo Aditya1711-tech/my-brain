@@ -85,11 +85,9 @@ _TBD_
 
 > Migrations applied during Phase 1.5. Additive only unless ledger says otherwise.
 
-- (none yet)
+- `0003` (2026-05-26): `extracted_fields` + `is_grounded`, `groundedness_method`, `importance`, `retry_budget`, `retry_budget_remaining`; `documents` + `processing_state` JSONB
 
 ### Pending migrations
-- `extracted_fields`: add `is_grounded`, `groundedness_method`, `importance`, `retry_budget`, `retry_budget_remaining`
-- `documents`: add `processing_state` JSONB
 - New: `chat_threads`, `chat_messages` + RLS
 
 ## API endpoints added or changed

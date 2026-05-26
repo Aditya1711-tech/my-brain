@@ -78,14 +78,24 @@ class ExtractedFieldsRepo:
         confidence: float,
         needs_retry: bool,
         reasoning: str,
+        is_grounded: bool | None = None,
+        groundedness_method: str | None = None,
+        importance: str | None = None,
+        retry_budget: int | None = None,
+        retry_budget_remaining: int | None = None,
     ) -> None:
-        """Update a field with verifier results."""
+        """Update a field with verifier + groundedness results."""
         await self.db.execute(
             text("""
                 UPDATE extracted_fields
                 SET confidence = :confidence,
                     needs_retry = :needs_retry,
-                    reasoning = :reasoning
+                    reasoning = :reasoning,
+                    is_grounded = COALESCE(:is_grounded, is_grounded),
+                    groundedness_method = COALESCE(:groundedness_method, groundedness_method),
+                    importance = COALESCE(:importance, importance),
+                    retry_budget = COALESCE(:retry_budget, retry_budget),
+                    retry_budget_remaining = COALESCE(:retry_budget_remaining, retry_budget_remaining)
                 WHERE document_id = :document_id AND field_name = :field_name
             """),
             {
@@ -94,6 +104,11 @@ class ExtractedFieldsRepo:
                 "confidence": confidence,
                 "needs_retry": needs_retry,
                 "reasoning": reasoning,
+                "is_grounded": is_grounded,
+                "groundedness_method": groundedness_method,
+                "importance": importance,
+                "retry_budget": retry_budget,
+                "retry_budget_remaining": retry_budget_remaining,
             },
         )
         await self.db.commit()
