@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
+- [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
+- [ ] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01)
 - [ ] `P1.5-D2-HARNESS-06` Verifier schema updates
 - [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
 - [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
@@ -37,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-06` Verifier schema updates (importance + retry_budget) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-05` Groundedness module (D-GROUND-01, 31 tests) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-04` Schema migration (groundedness + retry budget + processing_state) — 2026-05-26
@@ -65,7 +66,7 @@ _(none yet)_
 - [x] `P1.5-D2-HARNESS-04` Schema migration for new fields — 2026-05-26
 - [x] `P1.5-D2-HARNESS-05` Groundedness module (D-GROUND-01) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-06` Verifier schema updates — 2026-05-26
-- [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
+- [x] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02) — 2026-05-26
 - [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
 - [ ] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01)
 - [ ] `P1.5-D2-BENCH-02` Mid-phase benchmark + merge
@@ -109,14 +110,14 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 - [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25, regression tests in test_retry_count.py
 - [ ] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships
 - [ ] `D-AUTH-01` No JWT verification on /search and /chat
-- [ ] `D-GROUND-01` No groundedness check
+- [x] `D-GROUND-01` No groundedness check — fixed 2026-05-26, test_groundedness.py (31 tests) + retry integration test
 
 ### HIGH
 - [ ] `D-PIPELINE-01` Pipeline non-resumable due to in-memory state
 - [x] `D-LLM-RETRY-01` No LLM API retry with backoff — fixed 2026-05-26
 - [ ] `D-CHAT-HISTORY-01` Chat stateless, no conversation history
 - [ ] `D-VERIFIER-01` Verifier sees only 4000 chars
-- [ ] `D-VERIFIER-02` No re-verification after retry
+- [x] `D-VERIFIER-02` No re-verification after retry — fixed 2026-05-26, adaptive loop re-verifies after each retry
 
 ### MED
 - [ ] `D-VOCAB-CACHE-01` VocabCache rebuilt per request
