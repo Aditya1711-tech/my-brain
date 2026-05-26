@@ -85,8 +85,7 @@ class ExtractedFieldsRepo:
                 UPDATE extracted_fields
                 SET confidence = :confidence,
                     needs_retry = :needs_retry,
-                    reasoning = :reasoning,
-                    retry_count = retry_count + CASE WHEN :needs_retry THEN 1 ELSE 0 END
+                    reasoning = :reasoning
                 WHERE document_id = :document_id AND field_name = :field_name
             """),
             {

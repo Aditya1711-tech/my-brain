@@ -1,0 +1,137 @@
+# PROGRESS-1.5 — Living checklist (Phase 1.5)
+
+Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1.5.md`.
+
+---
+
+## Current
+
+> What's being worked on RIGHT NOW. One task. Replace when complete.
+
+_(Day 1 complete — next session starts Day 2)_
+
+## Up next
+
+> Queue for this session. Take from the top.
+
+- [ ] `P1.5-D2-HARNESS-04` Schema migration for new fields
+
+## Blockers
+
+> Anything stopping progress. Each blocker needs a clear question.
+
+_(none)_
+
+## Cross-track requests
+
+> Used during parallel execution. Format: "Track X needs Y from Track Z."
+
+_(none yet)_
+
+## Recently completed
+
+> Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
+
+- [x] `P1.5-D1-SETUP-03` Day 1 merge + tag phase-1.5-d1-end — 2026-05-26
+- [x] `P1.5-D1-SETUP-02` Test harness scaffolding (conftest + smoke test) — 2026-05-26
+- [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
+- [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
+- [x] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01) — 2026-05-25
+- [x] `P1.5-D1-BENCH-01` Baseline benchmark — 2026-05-25
+- [x] `P1.5-D1-SETUP-01` Bootstrap phase 1.5 branch + structure — 2026-05-25
+
+---
+
+## Phase 1.5 task tracker
+
+### Day 1 — Foundations, defects, baseline
+- [x] `P1.5-D1-SETUP-01` Bootstrap phase 1.5 branch + structure — 2026-05-25
+- [x] `P1.5-D1-BENCH-01` Baseline benchmark — 2026-05-25
+- [x] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01) — 2026-05-25
+- [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
+- [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
+- [x] `P1.5-D1-SETUP-02` Test harness scaffolding — 2026-05-26
+- [x] `P1.5-D1-SETUP-03` Day 1 merge + tag — 2026-05-26
+
+### Day 2 — Self-healing harness core
+- [ ] `P1.5-D2-HARNESS-04` Schema migration for new fields
+- [ ] `P1.5-D2-HARNESS-05` Groundedness module (D-GROUND-01)
+- [ ] `P1.5-D2-HARNESS-06` Verifier schema updates
+- [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
+- [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
+- [ ] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01)
+- [ ] `P1.5-D2-BENCH-02` Mid-phase benchmark + merge
+
+### Day 3 — Parallelism + summarizer + cache
+- [ ] `P1.5-D3-HARNESS-10` LLM summarizer agent (D-SUMMARY-01)
+- [ ] `P1.5-D3-HARNESS-11` Within-document parallelism
+- [ ] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01)
+- [ ] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01)
+- [ ] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01)
+- [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
+- [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
+
+### Day 4 — Hybrid chat + JWT auth
+- [ ] `P1.5-D4-CHAT-01` Schema for chat threads + messages
+- [ ] `P1.5-D4-CHAT-02` Question router
+- [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
+- [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
+- [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
+- [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
+- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
+- [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
+
+### Day 5 — Polish, eval, final benchmark, tag
+- [ ] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01)
+- [ ] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01)
+- [ ] `P1.5-D5-INTEG-01` LOW-class cleanup (D-BFF-FOLDERS-01, D-DEDUPE-INSERT-01, D-ENQUEUE-CONTRACT-01)
+- [ ] `P1.5-D5-BENCH-05` Final benchmark
+- [ ] `P1.5-D5-INTEG-02` End-to-end smoke test
+- [ ] `P1.5-D5-INTEG-03` Demo recording
+- [ ] `P1.5-D5-INTEG-04` Final sweep + tag v1.1-phase-1.5
+
+---
+
+## Defects tracker (mirror of `02-DEFECT-LEDGER.md`)
+
+Maps defect IDs to status. A defect is "closed" only when its regression test exists.
+
+### CRIT
+- [x] `D-AGENT-01` Agent singleton concurrency bug — fixed 2026-05-25, regression tests in test_agents_concurrency.py
+- [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25, regression tests in test_retry_count.py
+- [ ] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships
+- [ ] `D-AUTH-01` No JWT verification on /search and /chat
+- [ ] `D-GROUND-01` No groundedness check
+
+### HIGH
+- [ ] `D-PIPELINE-01` Pipeline non-resumable due to in-memory state
+- [x] `D-LLM-RETRY-01` No LLM API retry with backoff — fixed 2026-05-26
+- [ ] `D-CHAT-HISTORY-01` Chat stateless, no conversation history
+- [ ] `D-VERIFIER-01` Verifier sees only 4000 chars
+- [ ] `D-VERIFIER-02` No re-verification after retry
+
+### MED
+- [ ] `D-VOCAB-CACHE-01` VocabCache rebuilt per request
+- [ ] `D-FUZZY-MATCH-01` Tier 2 fuzzy only entities + doc_types
+- [ ] `D-VECTORIZER-TRACE-01` Vectorization not traced
+- [ ] `D-AGENT-INSERT-01` Field inserts not batched
+- [ ] `D-SUMMARY-01` summary is deterministic, not LLM
+- [ ] `D-CITATIONS-01` Citations don't include KG facts
+
+### LOW (do if time)
+- [ ] `D-BFF-FOLDERS-01` Missing /api/folders, /api/tags, /api/graph BFFs
+- [ ] `D-DEDUPE-INSERT-01` Untracked log artifact in repo
+- [ ] `D-ENQUEUE-CONTRACT-01` /enqueue uses query param vs plan
+- [ ] `D-RECHARTS-01` recharts not installed (skip until Phase 2)
+- [ ] `D-BLACK-01` black not installed (no action; ruff format used)
+
+---
+
+## Session log
+
+> Append a one-liner at end of each session. Helps recover context.
+
+Format: `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up`
+
+2026-05-25 | day-1 | Bootstrap + baseline + D-AGENT-01 singleton fix + D-RETRY-01 retry_count fix | SETUP-01, BENCH-01, HARNESS-01, HARNESS-02 | HARNESS-03 (LLM retry with backoff)
+2026-05-26 | day-1 | LLM retry + test harness + Day 1 merge/tag | HARNESS-03, SETUP-02, SETUP-03 | Day 2 (HARNESS-04)

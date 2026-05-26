@@ -7,10 +7,10 @@ import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.agents.classifier import ClassifierInput, classifier_agent
-from app.agents.extractor import ExtractorInput, extractor_agent
-from app.agents.schema_architect import SchemaArchitectInput, schema_architect_agent
-from app.agents.verifier import VerifierInput, verifier_agent
+from app.agents.classifier import ClassifierAgent, ClassifierInput
+from app.agents.extractor import ExtractorAgent, ExtractorInput
+from app.agents.schema_architect import SchemaArchitectAgent, SchemaArchitectInput
+from app.agents.verifier import VerifierAgent, VerifierInput
 from app.constants import MAX_RETRY_COUNT
 from app.integrations.supabase_client import supabase
 from app.parsing.router import parse_file
@@ -171,10 +171,9 @@ class PipelineOrchestrator:
             has_image=page_image is not None,
         )
 
-        if page_image:
-            classifier_agent.set_page_image(page_image)
-
-        output = await classifier_agent.run(input_data, trace_id=trace_id)
+        output = await ClassifierAgent().run(
+            input_data, trace_id=trace_id, page_image=page_image,
+        )
 
         # Update document with classification results
         await self.db.execute(
@@ -220,7 +219,7 @@ class PipelineOrchestrator:
             text_sample=raw_text[:4000],
         )
 
-        output = await schema_architect_agent.run(input_data, trace_id=trace_id)
+        output = await SchemaArchitectAgent().run(input_data, trace_id=trace_id)
 
         # Persist schema on document
         import json
@@ -269,10 +268,9 @@ class PipelineOrchestrator:
             has_images=len(page_images) > 0,
         )
 
-        if page_images:
-            extractor_agent.set_page_images(page_images)
-
-        output = await extractor_agent.run(input_data, trace_id=trace_id)
+        output = await ExtractorAgent().run(
+            input_data, trace_id=trace_id, page_images=page_images,
+        )
 
         # Build field type lookup from schema
         field_type_map: dict[str, str] = {}
@@ -348,7 +346,7 @@ class PipelineOrchestrator:
             extracted_fields=extracted_dicts,
             text_sample=raw_text[:4000],
         )
-        verification = await verifier_agent.run(verifier_input, trace_id=trace_id)
+        verification = await VerifierAgent().run(verifier_input, trace_id=trace_id)
 
         # Update field confidences
         for fv in verification.fields:
@@ -403,10 +401,9 @@ class PipelineOrchestrator:
                 retry_feedback=feedback,
             )
 
-            if page_images:
-                extractor_agent.set_page_images(page_images)
-
-            retry_output = await extractor_agent.run(retry_input, trace_id=trace_id)
+            retry_output = await ExtractorAgent().run(
+                retry_input, trace_id=trace_id, page_images=page_images,
+            )
 
             # Update only retried fields
             for f in retry_output.fields:
@@ -414,7 +411,9 @@ class PipelineOrchestrator:
                     await self.db.execute(
                         sql_text("""
                             UPDATE extracted_fields
-                            SET field_value = :value, needs_retry = false
+                            SET field_value = :value,
+                                needs_retry = false,
+                                retry_count = retry_count + 1
                             WHERE document_id = :doc_id AND field_name = :field_name
                         """),
                         {

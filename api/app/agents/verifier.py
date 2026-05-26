@@ -28,6 +28,3 @@ class VerifierAgent(Agent[VerifierInput, VerificationOutput]):
     model = MODEL_VERIFIER
     prompt_file = "verifier.md"
     output_schema = VerificationOutput
-
-
-verifier_agent = VerifierAgent()
