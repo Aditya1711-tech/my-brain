@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `P1.5-D1-SETUP-02` Test harness scaffolding
+- [ ] `P1.5-D1-SETUP-03` Merge + tag phase-1.5-d1-end
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `P1.5-D1-SETUP-03` Merge + tag phase-1.5-d1-end
+_(empty — SETUP-03 is final Day 1 task)_
 
 ## Blockers
 
@@ -32,6 +32,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D1-SETUP-02` Test harness scaffolding (conftest + smoke test) — 2026-05-26
 - [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
 - [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
 - [x] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01) — 2026-05-25
@@ -48,7 +49,7 @@ _(none yet)_
 - [x] `P1.5-D1-HARNESS-01` Fix agent singleton bug (D-AGENT-01) — 2026-05-25
 - [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
 - [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
-- [ ] `P1.5-D1-SETUP-02` Test harness scaffolding
+- [x] `P1.5-D1-SETUP-02` Test harness scaffolding — 2026-05-26
 - [ ] `P1.5-D1-SETUP-03` Day 1 merge + tag
 
 ### Day 2 — Self-healing harness core
@@ -95,8 +96,8 @@ _(none yet)_
 Maps defect IDs to status. A defect is "closed" only when its regression test exists.
 
 ### CRIT
-- [x] `D-AGENT-01` Agent singleton concurrency bug — fixed 2026-05-25 (regression test pending SETUP-02)
-- [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25 (regression test pending SETUP-02)
+- [x] `D-AGENT-01` Agent singleton concurrency bug — fixed 2026-05-25, regression tests in test_agents_concurrency.py
+- [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25, regression tests in test_retry_count.py
 - [ ] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships
 - [ ] `D-AUTH-01` No JWT verification on /search and /chat
 - [ ] `D-GROUND-01` No groundedness check
