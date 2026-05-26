@@ -6,6 +6,7 @@ import structlog
 from sqlalchemy import text as sql_text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.integrations.langfuse_client import langfuse
 from app.integrations.openai_embeddings import get_embeddings
 
 logger = structlog.get_logger()
@@ -31,8 +32,17 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
     return chunks
 
 
-async def vectorize_document(db: AsyncSession, doc_id: UUID, user_id: UUID) -> None:
+async def vectorize_document(
+    db: AsyncSession, doc_id: UUID, user_id: UUID, *, trace_id: str | None = None,
+) -> None:
     """Chunk a document's text, compute embeddings, and insert into chunks table."""
+    span = None
+    if trace_id and langfuse.enabled:
+        try:
+            trace = langfuse.trace(id=trace_id, name=f"pipeline-{trace_id}")
+            span = trace.span(name="vectorization", input={"doc_id": str(doc_id)})
+        except (AttributeError, Exception) as exc:
+            logger.debug("langfuse_tracing_unavailable", error=str(exc))
 
     # Load document text + summary + extracted fields for enriched chunks
     result = await db.execute(
@@ -106,3 +116,9 @@ async def vectorize_document(db: AsyncSession, doc_id: UUID, user_id: UUID) -> N
         doc_id=str(doc_id),
         chunks_inserted=len(chunks),
     )
+
+    if span:
+        try:
+            span.end(output={"chunks_inserted": len(chunks)})
+        except (AttributeError, Exception):
+            pass

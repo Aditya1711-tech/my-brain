@@ -560,4 +560,4 @@ class PipelineOrchestrator:
 
     async def _vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Chunk text and generate embeddings."""
-        await vectorize_document(self.db, doc.id, doc.user_id)
+        await vectorize_document(self.db, doc.id, doc.user_id, trace_id=trace_id)
