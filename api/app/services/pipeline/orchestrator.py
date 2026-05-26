@@ -11,7 +11,7 @@ from app.agents.classifier import ClassifierAgent, ClassifierInput
 from app.agents.extractor import ExtractorAgent, ExtractorInput
 from app.agents.schema_architect import SchemaArchitectAgent, SchemaArchitectInput
 from app.agents.verifier import VerifierAgent, VerifierInput
-from app.constants import MAX_RETRY_COUNT
+from app.services.pipeline.groundedness import check_groundedness
 from app.integrations.supabase_client import supabase
 from app.parsing.router import parse_file
 from app.repositories.documents_repo import DocumentsRepo
@@ -22,6 +22,15 @@ from app.services.pipeline.state_machine import STATUS_TO_STAGE, can_transition,
 from app.services.pipeline.vectorizer import vectorize_document
 
 logger = structlog.get_logger()
+
+
+def _compute_retry_budget(confidence: float, importance: str) -> int:
+    """Compute retry budget based on confidence and importance."""
+    if confidence >= 0.85:
+        return 0
+    if confidence >= 0.6:
+        return {"critical": 2, "important": 1, "nice_to_have": 0}.get(importance, 1)
+    return {"critical": 3, "important": 2, "nice_to_have": 1}.get(importance, 2)
 
 
 class PipelineOrchestrator:
@@ -311,10 +320,18 @@ class PipelineOrchestrator:
         self._last_extraction_output = output
 
     async def _verify(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
-        """Run verifier, then retry extractor for low-confidence fields."""
+        """Adaptive ground → verify → retry loop.
+
+        1. Groundedness check (deterministic, fast)
+        2. LLM verifier (on fields that aren't clearly ungrounded)
+        3. Combine signals → per-field confidence + retry budget
+        4. Retry extractor on fields with remaining budget
+        5. Repeat until no retries needed or max iterations reached
+        """
         from sqlalchemy import text as sql_text
         import json
 
+        max_iterations = 4
         fields_repo = ExtractedFieldsRepo(self.db)
 
         # Load doc data
@@ -327,87 +344,142 @@ class PipelineOrchestrator:
         schema_json = row[1] if row else None  # type: ignore[index]
         doc_type = row[2] or "unknown" if row else "unknown"  # type: ignore[index]
 
-        schema_fields = []
+        schema_fields: list[dict] = []
         if schema_json:
             schema_data = schema_json if isinstance(schema_json, dict) else json.loads(schema_json)
             schema_fields = schema_data.get("fields", [])
 
-        # Get current extracted fields
-        extracted = await fields_repo.get_by_document(doc.id)
-        extracted_dicts = [
-            {"name": f["field_name"], "value": f["field_value"], "type": f["field_type"]}
-            for f in extracted
-        ]
-
-        # Run verifier
-        verifier_input = VerifierInput(
-            document_type=doc_type,
-            schema_fields=schema_fields,
-            extracted_fields=extracted_dicts,
-            text_sample=raw_text[:4000],
-        )
-        verification = await VerifierAgent().run(verifier_input, trace_id=trace_id)
-
-        # Update field confidences
-        for fv in verification.fields:
-            await fields_repo.update_verification(
-                document_id=doc.id,
-                field_name=fv.field_name,
-                confidence=fv.confidence,
-                needs_retry=fv.needs_retry,
-                reasoning=fv.reasoning,
-            )
-
-        # Check if retry is needed
-        retry_fields = [
-            fv for fv in verification.fields if fv.needs_retry
-        ]
-        retry_field_names = [fv.field_name for fv in retry_fields]
-
-        # Get current retry counts
-        current_fields = await fields_repo.get_by_document(doc.id)
-        retry_counts = {
-            f["field_name"]: f["retry_count"] for f in current_fields
+        # Build importance map from schema
+        importance_map = {
+            sf["name"]: sf.get("importance", "important") for sf in schema_fields
         }
 
-        eligible_retries = [
-            name for name in retry_field_names
-            if retry_counts.get(name, 0) < MAX_RETRY_COUNT
-        ]
+        # Track per-field retry budgets across iterations
+        budgets: dict[str, int] = {}  # field_name → remaining budget
 
-        if eligible_retries:
+        extraction = getattr(self, "_last_extraction", None)
+        page_images = extraction.page_images if extraction else []
+
+        for iteration in range(1, max_iterations + 1):
+            # Get current extracted fields
+            extracted = await fields_repo.get_by_document(doc.id)
+            field_dicts = [
+                {"name": f["field_name"], "value": f["field_value"], "type": f["field_type"]}
+                for f in extracted
+            ]
+
+            # 1. Groundedness check
+            ground_results = check_groundedness(field_dicts, raw_text, schema_fields)
+
+            # 2. LLM verifier
+            verifier_input = VerifierInput(
+                document_type=doc_type,
+                schema_fields=schema_fields,
+                extracted_fields=field_dicts,
+                text_sample=raw_text[:16000],
+            )
+            verification = await VerifierAgent().run(verifier_input, trace_id=trace_id)
+
+            # 3. Combine signals and persist
+            verify_map = {fv.field_name: fv for fv in verification.fields}
+            to_retry: list[str] = []
+
+            for fd in field_dicts:
+                name = fd["name"]
+                g = ground_results.get(name)
+                v = verify_map.get(name)
+                importance = importance_map.get(name, "important")
+
+                # Compute final confidence
+                confidence = v.confidence if v else 0.5
+                if g and not g.is_grounded and not g.is_ambiguous:
+                    confidence = min(confidence, 0.3)
+                elif g and g.is_ambiguous:
+                    confidence = confidence * 0.9
+
+                needs_retry = v.needs_retry if v else False
+
+                # Compute retry budget on first iteration
+                if name not in budgets:
+                    budgets[name] = _compute_retry_budget(confidence, importance)
+                    if g and not g.is_grounded and not g.is_ambiguous:
+                        budgets[name] = min(budgets[name] + 1, 3)
+
+                reasoning_parts = []
+                if v:
+                    reasoning_parts.append(v.reasoning)
+                if g and not g.is_grounded:
+                    reasoning_parts.append(f"not grounded ({g.method})")
+                reasoning = "; ".join(reasoning_parts) or "no verification data"
+
+                # Persist verification state
+                await fields_repo.update_verification(
+                    document_id=doc.id,
+                    field_name=name,
+                    confidence=confidence,
+                    needs_retry=needs_retry and budgets[name] > 0,
+                    reasoning=reasoning,
+                    is_grounded=g.is_grounded if g else None,
+                    groundedness_method=g.method if g else None,
+                    importance=importance,
+                    retry_budget=budgets.get(name, 0) + (
+                        _compute_retry_budget(confidence, importance)
+                        if name not in budgets else 0
+                    ),
+                    retry_budget_remaining=budgets[name],
+                )
+
+                # Decide if this field needs retry
+                if budgets[name] > 0 and (needs_retry or (g and not g.is_grounded)):
+                    to_retry.append(name)
+
+            # 4. If nothing to retry, we're done
+            if not to_retry:
+                logger.info(
+                    "pipeline.verify_complete",
+                    doc_id=str(doc.id),
+                    iteration=iteration,
+                )
+                break
+
+            # 5. Retry extractor on flagged fields
             logger.info(
                 "pipeline.retry_extraction",
                 doc_id=str(doc.id),
-                retry_fields=eligible_retries,
+                iteration=iteration,
+                retry_fields=to_retry,
             )
 
-            feedback = "; ".join(
-                f"{fv.field_name}: {fv.reasoning}"
-                for fv in retry_fields
-                if fv.field_name in eligible_retries
-            )
-
-            # Re-run extractor with retry context
-            extraction = getattr(self, "_last_extraction", None)
-            page_images = extraction.page_images if extraction else []
+            feedback_parts = []
+            for name in to_retry:
+                g = ground_results.get(name)
+                v = verify_map.get(name)
+                parts = []
+                if g and not g.is_grounded:
+                    field_val = next(
+                        (fd["value"] for fd in field_dicts if fd["name"] == name), None,
+                    )
+                    parts.append(f"value '{field_val}' not found in source")
+                if v and v.reasoning:
+                    parts.append(v.reasoning)
+                feedback_parts.append(f"{name}: {'; '.join(parts)}")
 
             retry_input = ExtractorInput(
                 schema_fields=schema_fields,
                 document_type=doc_type,
                 text=raw_text[:8000],
                 has_images=len(page_images) > 0,
-                retry_fields=eligible_retries,
-                retry_feedback=feedback,
+                retry_fields=to_retry,
+                retry_feedback="; ".join(feedback_parts),
             )
 
             retry_output = await ExtractorAgent().run(
                 retry_input, trace_id=trace_id, page_images=page_images,
             )
 
-            # Update only retried fields
+            # 6. Update retried fields and decrement budgets
             for f in retry_output.fields:
-                if f.name in eligible_retries:
+                if f.name in to_retry:
                     await self.db.execute(
                         sql_text("""
                             UPDATE extracted_fields
@@ -423,6 +495,10 @@ class PipelineOrchestrator:
                         },
                     )
             await self.db.commit()
+
+            # Decrement budgets for retried fields
+            for name in to_retry:
+                budgets[name] = max(0, budgets[name] - 1)
 
     async def _integrate(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Run knowledge integration — entity resolution, facts, relationships."""
