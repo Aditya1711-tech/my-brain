@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01)
+- [ ] `P1.5-D2-BENCH-02` Mid-phase benchmark + merge
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `P1.5-D2-BENCH-02` Mid-phase benchmark + merge
+_(empty — BENCH-02 is final Day 2 task)_
 - [ ] `P1.5-D2-HARNESS-06` Verifier schema updates
 - [ ] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02)
 - [ ] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01)
@@ -37,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (already in HARNESS-07) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-06` Verifier schema updates (importance + retry_budget) — 2026-05-26
@@ -69,7 +70,7 @@ _(none yet)_
 - [x] `P1.5-D2-HARNESS-06` Verifier schema updates — 2026-05-26
 - [x] `P1.5-D2-HARNESS-07` Orchestrator adaptive retry loop (D-VERIFIER-02) — 2026-05-26
 - [x] `P1.5-D2-HARNESS-08` Vectorization tracing (D-VECTORIZER-TRACE-01) — 2026-05-26
-- [ ] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01)
+- [x] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (D-VERIFIER-01) — 2026-05-26 (done in HARNESS-07)
 - [ ] `P1.5-D2-BENCH-02` Mid-phase benchmark + merge
 
 ### Day 3 — Parallelism + summarizer + cache
@@ -117,7 +118,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 - [ ] `D-PIPELINE-01` Pipeline non-resumable due to in-memory state
 - [x] `D-LLM-RETRY-01` No LLM API retry with backoff — fixed 2026-05-26
 - [ ] `D-CHAT-HISTORY-01` Chat stateless, no conversation history
-- [ ] `D-VERIFIER-01` Verifier sees only 4000 chars
+- [x] `D-VERIFIER-01` Verifier sees only 4000 chars — fixed 2026-05-26, expanded to 16000 in adaptive loop
 - [x] `D-VERIFIER-02` No re-verification after retry — fixed 2026-05-26, adaptive loop re-verifies after each retry
 
 ### MED
@@ -145,3 +146,4 @@ Format: `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up
 
 2026-05-25 | day-1 | Bootstrap + baseline + D-AGENT-01 singleton fix + D-RETRY-01 retry_count fix | SETUP-01, BENCH-01, HARNESS-01, HARNESS-02 | HARNESS-03 (LLM retry with backoff)
 2026-05-26 | day-1 | LLM retry + test harness + Day 1 merge/tag | HARNESS-03, SETUP-02, SETUP-03 | Day 2 (HARNESS-04)
+2026-05-26 | day-2 | Schema migration, groundedness, adaptive retry, tracing, verifier expansion | HARNESS-04..09 | BENCH-02 (benchmark + merge)
