@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `P1.5-D1-SETUP-03` Merge + tag phase-1.5-d1-end
+_(Day 1 complete — next session starts Day 2)_
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-_(empty — SETUP-03 is final Day 1 task)_
+- [ ] `P1.5-D2-HARNESS-04` Schema migration for new fields
 
 ## Blockers
 
@@ -32,6 +32,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D1-SETUP-03` Day 1 merge + tag phase-1.5-d1-end — 2026-05-26
 - [x] `P1.5-D1-SETUP-02` Test harness scaffolding (conftest + smoke test) — 2026-05-26
 - [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
 - [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
@@ -50,7 +51,7 @@ _(none yet)_
 - [x] `P1.5-D1-HARNESS-02` Fix retry_count bug (D-RETRY-01) — 2026-05-25
 - [x] `P1.5-D1-HARNESS-03` LLM API retry with backoff (D-LLM-RETRY-01) — 2026-05-26
 - [x] `P1.5-D1-SETUP-02` Test harness scaffolding — 2026-05-26
-- [ ] `P1.5-D1-SETUP-03` Day 1 merge + tag
+- [x] `P1.5-D1-SETUP-03` Day 1 merge + tag — 2026-05-26
 
 ### Day 2 — Self-healing harness core
 - [ ] `P1.5-D2-HARNESS-04` Schema migration for new fields
@@ -133,3 +134,4 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 Format: `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up`
 
 2026-05-25 | day-1 | Bootstrap + baseline + D-AGENT-01 singleton fix + D-RETRY-01 retry_count fix | SETUP-01, BENCH-01, HARNESS-01, HARNESS-02 | HARNESS-03 (LLM retry with backoff)
+2026-05-26 | day-1 | LLM retry + test harness + Day 1 merge/tag | HARNESS-03, SETUP-02, SETUP-03 | Day 2 (HARNESS-04)
