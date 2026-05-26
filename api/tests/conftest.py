@@ -86,6 +86,7 @@ def canned_schema_architect():
                 "description": "Full name of passport holder",
                 "required": True,
                 "is_entity_field": True,
+                "importance": "critical",
             },
             {
                 "name": "passport_number",
@@ -93,6 +94,7 @@ def canned_schema_architect():
                 "description": "Passport number",
                 "required": True,
                 "is_entity_field": False,
+                "importance": "critical",
             },
             {
                 "name": "date_of_birth",
@@ -100,6 +102,7 @@ def canned_schema_architect():
                 "description": "Date of birth",
                 "required": True,
                 "is_entity_field": False,
+                "importance": "important",
             },
         ],
         "entity_extraction_required": True,
@@ -127,9 +130,9 @@ def canned_verifier():
     """Canned VerificationOutput dict — all fields pass."""
     return _make_anthropic_response("VerificationOutput", {
         "fields": [
-            {"field_name": "full_name", "confidence": 0.95, "needs_retry": False, "reasoning": "Matches text"},
-            {"field_name": "passport_number", "confidence": 0.98, "needs_retry": False, "reasoning": "Clear identifier"},
-            {"field_name": "date_of_birth", "confidence": 0.90, "needs_retry": False, "reasoning": "Standard format"},
+            {"field_name": "full_name", "confidence": 0.95, "needs_retry": False, "importance": "critical", "retry_budget": 0, "reasoning": "Matches text"},
+            {"field_name": "passport_number", "confidence": 0.98, "needs_retry": False, "importance": "critical", "retry_budget": 0, "reasoning": "Clear identifier"},
+            {"field_name": "date_of_birth", "confidence": 0.90, "needs_retry": False, "importance": "important", "retry_budget": 0, "reasoning": "Standard format"},
         ],
         "overall_quality": 0.94,
     })

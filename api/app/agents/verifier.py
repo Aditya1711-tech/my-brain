@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 from app.agents.base import Agent
@@ -8,6 +10,8 @@ class FieldVerification(BaseModel):
     field_name: str
     confidence: float
     needs_retry: bool
+    importance: Literal["critical", "important", "nice_to_have"] = "important"
+    retry_budget: int = 0
     reasoning: str
 
 

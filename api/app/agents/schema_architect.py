@@ -20,6 +20,7 @@ class SchemaField(BaseModel):
     description: str
     required: bool
     is_entity_field: bool
+    importance: Literal["critical", "important", "nice_to_have"] = "important"
     enum_values: list[str] | None = None
 
 

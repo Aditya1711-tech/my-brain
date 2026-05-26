@@ -21,4 +21,9 @@ For UNKNOWN types, design a reasonable schema:
 For fields involving people, set is_entity_field=true.
 For identifiers (numbers like passport_number, PAN, ISIN), set field_type=identifier.
 
+Set importance per field:
+- "critical": unique identifiers (passport_number, pan_number, aadhaar_number, license_number, invoice_number, registration_number, patient_id, account numbers), monetary amounts (total_amount), and primary entity names (holder_name, patient_name). Wrong values here are costly — the system will retry harder.
+- "important" (default): most fields — dates, addresses, descriptive text. The system retries moderately if uncertain.
+- "nice_to_have": optional descriptive or supplementary fields (notes, action_items, audience, issuing_authority). The system accepts low-confidence values rather than retrying.
+
 Keep field names snake_case. Field count: 3-12. Don't pad with trivial fields.
