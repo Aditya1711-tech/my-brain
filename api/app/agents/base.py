@@ -6,7 +6,7 @@ from typing import Generic, TypeVar
 import structlog
 from pydantic import BaseModel
 
-from app.integrations.anthropic_client import client as anthropic_client
+from app.integrations.anthropic_client import create_message
 from app.integrations.langfuse_client import langfuse
 
 logger = structlog.get_logger()
@@ -70,7 +70,7 @@ class Agent(Generic[TIn, TOut]):
 
         try:
             messages = self._build_messages(input_data, **kwargs)
-            response = await anthropic_client.messages.create(
+            response = await create_message(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 tools=[self._tool_definition()],

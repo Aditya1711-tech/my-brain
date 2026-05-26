@@ -91,11 +91,10 @@ async def test_classifier_concurrent_calls_isolated():
 
     with (
         patch.object(ClassifierAgent, "_build_messages", spy_build),
-        patch("app.agents.base.anthropic_client") as mock_client,
+        patch("app.agents.base.create_message", new_callable=AsyncMock, return_value=mock_resp) as mock_create,
         patch("app.agents.base.langfuse") as mock_langfuse,
     ):
         mock_langfuse.enabled = False
-        mock_client.messages.create = AsyncMock(return_value=mock_resp)
 
         img_a = b"IMAGE_A_DATA"
         img_b = b"IMAGE_B_DATA"
@@ -134,11 +133,10 @@ async def test_extractor_concurrent_calls_isolated():
 
     with (
         patch.object(ExtractorAgent, "_build_messages", spy_build),
-        patch("app.agents.base.anthropic_client") as mock_client,
+        patch("app.agents.base.create_message", new_callable=AsyncMock, return_value=mock_resp) as mock_create,
         patch("app.agents.base.langfuse") as mock_langfuse,
     ):
         mock_langfuse.enabled = False
-        mock_client.messages.create = AsyncMock(return_value=mock_resp)
 
         imgs_a = [b"PAGE_1_A", b"PAGE_2_A"]
         imgs_b = [b"PAGE_1_B"]
