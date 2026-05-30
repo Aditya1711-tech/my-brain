@@ -8,14 +8,14 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01, 19 tests) — 2026-05-30
+- [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost, 9 tests) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
+- [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
 - [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
-- [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
+- [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost) — 2026-05-30
 - [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
 - [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
 - [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
@@ -37,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost, 9 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01, 19 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-02` Question router (19 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
@@ -95,7 +96,7 @@ _(none yet)_
 - [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 - [x] `P1.5-D4-CHAT-02` Question router — 2026-05-30
 - [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
-- [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
+- [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost) — 2026-05-30
 - [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
 - [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
 - [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
