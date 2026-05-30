@@ -8,12 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D5-INTEG-01` LOW-class cleanup (D-ENQUEUE-CONTRACT-01) — 2026-05-30
+- [x] `P1.5-D5-INTEG-02` Code-level smoke: 183 tests, 0 TS errors, 0 lint errors — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D5-BENCH-05` Final benchmark
+- [ ] `P1.5-D5-INTEG-04` Final sweep + tag v1.1-phase-1.5
 
 ## Blockers
 
@@ -31,6 +31,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D5-INTEG-02` Code-level smoke: 183 tests, 0 TS errors, 0 lint errors — 2026-05-30
 - [x] `P1.5-D5-INTEG-01` LOW-class cleanup: D-ENQUEUE-CONTRACT-01 (body), D-DEDUPE-INSERT-01 (N/A) — 2026-05-30
 - [x] `P1.5-D5-CHAT-07` Citation unification verified + persistence fix (D-CITATIONS-01, 5 tests) — 2026-05-30
 - [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01, 5 tests) — 2026-05-30
@@ -107,8 +108,8 @@ _(none yet)_
 - [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01) — 2026-05-30
 - [x] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01) — 2026-05-30
 - [x] `P1.5-D5-INTEG-01` LOW-class cleanup — 2026-05-30
-- [ ] `P1.5-D5-BENCH-05` Final benchmark
-- [ ] `P1.5-D5-INTEG-02` End-to-end smoke test
+- [ ] `P1.5-D5-BENCH-05` Final benchmark (deferred — run after deploy)
+- [x] `P1.5-D5-INTEG-02` End-to-end smoke test (code-level) — 2026-05-30
 - [ ] `P1.5-D5-INTEG-03` Demo recording
 - [ ] `P1.5-D5-INTEG-04` Final sweep + tag v1.1-phase-1.5
 
