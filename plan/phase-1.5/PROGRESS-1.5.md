@@ -8,12 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
+- [x] `P1.5-D4-CHAT-02` Question router — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D4-CHAT-02` Question router
+- [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
 - [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
 - [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
 - [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
@@ -37,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D4-CHAT-02` Question router (19 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 - [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
 - [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
@@ -91,7 +92,7 @@ _(none yet)_
 
 ### Day 4 — Hybrid chat + JWT auth
 - [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
-- [ ] `P1.5-D4-CHAT-02` Question router
+- [x] `P1.5-D4-CHAT-02` Question router — 2026-05-30
 - [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
 - [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
 - [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
