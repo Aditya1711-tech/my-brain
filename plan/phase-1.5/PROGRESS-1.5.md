@@ -8,19 +8,11 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D4-CHAT-06` Chat threads BFF + frontend — 2026-05-30
+- [x] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
-- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
-- [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
-- [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
-- [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost) — 2026-05-30
-- [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01) — 2026-05-30
-- [x] `P1.5-D4-CHAT-06` Chat threads BFF + frontend — 2026-05-30
-- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
 - [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
 
 ## Blockers
@@ -39,6 +31,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01, 11 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-06` Chat threads BFF + frontend — 2026-05-30
 - [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01, 13 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost, 9 tests) — 2026-05-30
@@ -103,7 +96,7 @@ _(none yet)_
 - [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost) — 2026-05-30
 - [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01) — 2026-05-30
 - [x] `P1.5-D4-CHAT-06` Chat threads BFF + frontend — 2026-05-30
-- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
+- [x] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01) — 2026-05-30
 - [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
 
 ### Day 5 — Polish, eval, final benchmark, tag
@@ -125,7 +118,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 - [x] `D-AGENT-01` Agent singleton concurrency bug — fixed 2026-05-25, regression tests in test_agents_concurrency.py
 - [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25, regression tests in test_retry_count.py
 - [x] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships — fixed 2026-05-30, KGRetriever with entity resolution + relationship traversal, test_kg_retriever.py (19 tests)
-- [ ] `D-AUTH-01` No JWT verification on /search and /chat
+- [x] `D-AUTH-01` No JWT verification on /search and /chat — fixed 2026-05-30, VerifiedUser dependency + BFF JWT forwarding, test_jwt_auth.py (11 tests)
 - [x] `D-GROUND-01` No groundedness check — fixed 2026-05-26, test_groundedness.py (31 tests) + retry integration test
 
 ### HIGH
