@@ -1,5 +1,6 @@
 """Pipeline orchestrator — drives a document through all stages."""
 
+import asyncio
 import time
 from uuid import UUID
 
@@ -13,6 +14,7 @@ from app.agents.schema_architect import SchemaArchitectAgent, SchemaArchitectInp
 from app.agents.summarizer import SummarizerAgent, SummarizerInput
 from app.agents.verifier import VerifierAgent, VerifierInput
 from app.services.pipeline.groundedness import check_groundedness
+from app.db.session import async_session_factory
 from app.integrations.supabase_client import supabase
 from app.parsing.router import parse_file
 from app.repositories.documents_repo import DocumentsRepo
@@ -39,6 +41,7 @@ class PipelineOrchestrator:
         self.docs_repo = DocumentsRepo(db)
         self.events_repo = EventsRepo(db)
         self.db = db
+        self._vectorization_done = False
 
     async def run(self, doc_id: UUID) -> None:
         """Drive a document through the pipeline until ready or failed."""
@@ -117,7 +120,7 @@ class PipelineOrchestrator:
         if stage == "text_extraction":
             await self._extract_text(doc, trace_id)
         elif stage == "classification":
-            await self._classify(doc, trace_id)
+            await self._classify_and_summarize(doc, trace_id)
         elif stage == "schema_building":
             await self._build_schema(doc, trace_id)
         elif stage == "extraction":
@@ -125,9 +128,12 @@ class PipelineOrchestrator:
         elif stage == "verification":
             await self._verify(doc, trace_id)
         elif stage == "integration":
-            await self._integrate(doc, trace_id)
+            await self._integrate_and_vectorize(doc, trace_id)
         elif stage == "vectorization":
-            await self._vectorize(doc, trace_id)
+            if self._vectorization_done:
+                logger.info("pipeline.vectorization_already_done", doc_id=str(doc.id))
+            else:
+                await self._vectorize(doc, trace_id)
         else:
             logger.info("pipeline.stage_stub", stage=stage, doc_id=str(doc.id))
 
@@ -158,34 +164,54 @@ class PipelineOrchestrator:
         # Store extraction data for next stages
         self._last_extraction = extraction
 
-    async def _classify(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
-        """Run classifier agent on the extracted text."""
+    async def _classify_and_summarize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run classification and summarization in parallel.
+
+        Both agents only need raw_text, so we pre-read it once and
+        run both LLM calls concurrently. DB writes are sequential.
+        Summarize failure is non-fatal (logged, pipeline continues).
+        """
         from sqlalchemy import text as sql_text
 
-        # Get the raw text
+        # Pre-read shared data
         result = await self.db.execute(
             sql_text("SELECT raw_text FROM documents WHERE id = :doc_id"),
             {"doc_id": str(doc.id)},
         )
         row = result.fetchone()
-        raw_text = row[0] if row else ""  # type: ignore[index]
+        raw_text = row[0] or "" if row else ""  # type: ignore[index]
 
-        # Get page images if available
         extraction = getattr(self, "_last_extraction", None)
         page_image = None
         if extraction and extraction.page_images:
             page_image = extraction.page_images[0]
 
-        input_data = ClassifierInput(
-            text_sample=raw_text[:6000] if raw_text else "",
-            has_image=page_image is not None,
+        # Run both LLM calls in parallel (no DB access during this phase)
+        classify_coro = ClassifierAgent().run(
+            ClassifierInput(
+                text_sample=raw_text[:6000] if raw_text else "",
+                has_image=page_image is not None,
+            ),
+            trace_id=trace_id,
+            page_image=page_image,
+        )
+        summarize_coro = SummarizerAgent().run(
+            SummarizerInput(
+                document_type="document",
+                text_sample=raw_text[:4000],
+            ),
+            trace_id=trace_id,
         )
 
-        output = await ClassifierAgent().run(
-            input_data, trace_id=trace_id, page_image=page_image,
+        classify_output, summarize_output = await asyncio.gather(
+            classify_coro, summarize_coro, return_exceptions=True,
         )
 
-        # Update document with classification results
+        # Classification failure is fatal
+        if isinstance(classify_output, BaseException):
+            raise classify_output
+
+        # Write classification results to DB
         await self.db.execute(
             sql_text("""
                 UPDATE documents
@@ -199,16 +225,33 @@ class PipelineOrchestrator:
                 WHERE id = :doc_id
             """),
             {
-                "doc_type": output.document_type,
-                "domain": output.domain,
-                "country": output.country,
-                "language": output.primary_language,
-                "is_scanned": output.is_scanned,
-                "is_handwritten": output.is_handwritten,
+                "doc_type": classify_output.document_type,
+                "domain": classify_output.domain,
+                "country": classify_output.country,
+                "language": classify_output.primary_language,
+                "is_scanned": classify_output.is_scanned,
+                "is_handwritten": classify_output.is_handwritten,
                 "doc_id": str(doc.id),
             },
         )
         await self.db.commit()
+
+        # Summarize failure is non-fatal
+        if isinstance(summarize_output, BaseException):
+            logger.warning(
+                "pipeline.summarize_failed_nonfatal",
+                doc_id=str(doc.id),
+                error=str(summarize_output),
+            )
+        elif summarize_output.summary:
+            await self.db.execute(
+                sql_text("""
+                    UPDATE documents SET summary = :summary, updated_at = now()
+                    WHERE id = :doc_id
+                """),
+                {"summary": summarize_output.summary[:500], "doc_id": str(doc.id)},
+            )
+            await self.db.commit()
 
     async def _build_schema(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Run schema architect agent."""
@@ -303,22 +346,6 @@ class PipelineOrchestrator:
             for f in output.fields
         ]
         await fields_repo.bulk_insert(field_creates)
-
-        # Generate LLM summary
-        summary_input = SummarizerInput(
-            document_type=doc_type,
-            text_sample=raw_text[:4000],
-        )
-        summary_output = await SummarizerAgent().run(summary_input, trace_id=trace_id)
-        if summary_output.summary:
-            await self.db.execute(
-                sql_text("""
-                    UPDATE documents SET summary = :summary, updated_at = now()
-                    WHERE id = :doc_id
-                """),
-                {"summary": summary_output.summary[:500], "doc_id": str(doc.id)},
-            )
-            await self.db.commit()
 
         # Store extraction output for verifier
         self._last_extraction_output = output
@@ -561,6 +588,39 @@ class PipelineOrchestrator:
             extracted_fields=extracted_dicts,
             trace_id=trace_id,
         )
+
+    async def _integrate_and_vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run integration and vectorization in parallel.
+
+        Uses a separate DB session for vectorization to avoid
+        concurrent access on the orchestrator's AsyncSession.
+        Integration failure is fatal; vectorize failure is non-fatal
+        (retried in the subsequent vectorization stage).
+        """
+
+        async def _vectorize_parallel() -> None:
+            async with async_session_factory() as vec_db:
+                await vectorize_document(vec_db, doc.id, doc.user_id, trace_id=trace_id)
+
+        integrate_result, vectorize_result = await asyncio.gather(
+            self._integrate(doc, trace_id),
+            _vectorize_parallel(),
+            return_exceptions=True,
+        )
+
+        # Integration failure is fatal
+        if isinstance(integrate_result, BaseException):
+            raise integrate_result
+
+        # Vectorize failure is non-fatal; will retry in vectorization stage
+        if isinstance(vectorize_result, BaseException):
+            logger.warning(
+                "pipeline.vectorize_parallel_failed",
+                doc_id=str(doc.id),
+                error=str(vectorize_result),
+            )
+        else:
+            self._vectorization_done = True
 
     async def _vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Chunk text and generate embeddings."""
