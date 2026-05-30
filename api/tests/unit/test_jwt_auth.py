@@ -5,34 +5,38 @@ Verifies:
 - Non-Bearer prefix → 401
 - Invalid/malformed token → 401
 - Expired token → 401
-- Wrong signature (bad secret) → 401
+- Wrong signature (bad key) → 401
 - Missing 'sub' claim → 401
 - Wrong audience → 401
 - Valid token → correct UUID returned
 """
 
 import time
+from unittest.mock import MagicMock, patch
 from uuid import UUID, uuid4
 
 import jwt
 import pytest
+from cryptography.hazmat.primitives.asymmetric import ec
 from fastapi import HTTPException
 
 from app.deps import verify_jwt
 
-# Test secret — not the real one
-TEST_SECRET = "test-jwt-secret-with-at-least-32-characters-long"
+# Generate a test EC key pair for ES256
+_TEST_PRIVATE_KEY = ec.generate_private_key(ec.SECP256R1())
+_TEST_PUBLIC_KEY = _TEST_PRIVATE_KEY.public_key()
+
+# Second key pair for "wrong key" tests
+_WRONG_PRIVATE_KEY = ec.generate_private_key(ec.SECP256R1())
 
 
 def _make_token(
     user_id: str | None = None,
-    secret: str = TEST_SECRET,
-    algorithm: str = "HS256",
+    private_key=_TEST_PRIVATE_KEY,
     audience: str = "authenticated",
     exp_offset: int = 3600,
-    extra_claims: dict | None = None,
 ) -> str:
-    """Build a Supabase-style JWT for testing."""
+    """Build a Supabase-style JWT signed with ES256 for testing."""
     now = int(time.time())
     payload: dict = {
         "aud": audience,
@@ -42,21 +46,22 @@ def _make_token(
     }
     if user_id is not None:
         payload["sub"] = user_id
-    if extra_claims:
-        payload.update(extra_claims)
-    return jwt.encode(payload, secret, algorithm=algorithm)
+    return jwt.encode(payload, private_key, algorithm="ES256")
 
 
 # -- Fixtures ----------------------------------------------------------------
 
 @pytest.fixture(autouse=True)
-def _patch_settings(monkeypatch):
-    """Patch the supabase_jwt_secret setting for all tests."""
-    from unittest.mock import MagicMock
+def _patch_jwk_client():
+    """Patch the JWKS client to return our test public key."""
+    mock_signing_key = MagicMock()
+    mock_signing_key.key = _TEST_PUBLIC_KEY
 
-    mock_secret = MagicMock()
-    mock_secret.get_secret_value.return_value = TEST_SECRET
-    monkeypatch.setattr("app.deps.settings.supabase_jwt_secret", mock_secret)
+    mock_client = MagicMock()
+    mock_client.get_signing_key_from_jwt.return_value = mock_signing_key
+
+    with patch("app.deps._jwk_client", mock_client):
+        yield mock_client
 
 
 # -- Tests -------------------------------------------------------------------
@@ -107,9 +112,9 @@ async def test_expired_token():
 
 
 @pytest.mark.asyncio
-async def test_wrong_secret():
-    """Token signed with wrong secret → 401."""
-    token = _make_token(user_id=str(uuid4()), secret="wrong-secret-that-is-long-enough")
+async def test_wrong_key():
+    """Token signed with different key → 401."""
+    token = _make_token(user_id=str(uuid4()), private_key=_WRONG_PRIVATE_KEY)
     with pytest.raises(HTTPException) as exc_info:
         await verify_jwt(authorization=f"Bearer {token}")
     assert exc_info.value.status_code == 401

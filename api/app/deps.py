@@ -32,6 +32,11 @@ VerifiedApiKey = Annotated[str, Depends(verify_api_key)]
 # User-facing JWT auth (Supabase access_token on /search /chat /threads)
 # ---------------------------------------------------------------------------
 
+# Supabase JWKS endpoint — serves the public keys for ES256 token verification
+_jwks_url = f"{settings.next_public_supabase_url}/auth/v1/.well-known/jwks.json"
+_jwk_client = jwt.PyJWKClient(_jwks_url, cache_keys=True, lifespan=3600)
+
+
 async def verify_jwt(
     authorization: Annotated[str | None, Header()] = None,
 ) -> UUID:
@@ -43,10 +48,11 @@ async def verify_jwt(
         )
     token = authorization.removeprefix("Bearer ").strip()
     try:
+        signing_key = _jwk_client.get_signing_key_from_jwt(token)
         payload = jwt.decode(
             token,
-            settings.supabase_jwt_secret.get_secret_value(),
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["ES256"],
             audience="authenticated",
         )
         return UUID(payload["sub"])
