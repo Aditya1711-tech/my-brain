@@ -8,12 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01) — 2026-05-30
+- [x] `P1.5-D5-INTEG-01` LOW-class cleanup (D-ENQUEUE-CONTRACT-01) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D5-INTEG-01` LOW-class cleanup (D-BFF-FOLDERS-01, D-DEDUPE-INSERT-01, D-ENQUEUE-CONTRACT-01)
+- [ ] `P1.5-D5-BENCH-05` Final benchmark
 
 ## Blockers
 
@@ -31,6 +31,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D5-INTEG-01` LOW-class cleanup: D-ENQUEUE-CONTRACT-01 (body), D-DEDUPE-INSERT-01 (N/A) — 2026-05-30
 - [x] `P1.5-D5-CHAT-07` Citation unification verified + persistence fix (D-CITATIONS-01, 5 tests) — 2026-05-30
 - [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01, 5 tests) — 2026-05-30
 - [x] `P1.5-D4-BENCH-04` Chat quality eval (15 tests) — 2026-05-30
@@ -105,7 +106,7 @@ _(none yet)_
 ### Day 5 — Polish, eval, final benchmark, tag
 - [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01) — 2026-05-30
 - [x] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01) — 2026-05-30
-- [ ] `P1.5-D5-INTEG-01` LOW-class cleanup (D-BFF-FOLDERS-01, D-DEDUPE-INSERT-01, D-ENQUEUE-CONTRACT-01)
+- [x] `P1.5-D5-INTEG-01` LOW-class cleanup — 2026-05-30
 - [ ] `P1.5-D5-BENCH-05` Final benchmark
 - [ ] `P1.5-D5-INTEG-02` End-to-end smoke test
 - [ ] `P1.5-D5-INTEG-03` Demo recording
@@ -141,8 +142,8 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 
 ### LOW (do if time)
 - [ ] `D-BFF-FOLDERS-01` Missing /api/folders, /api/tags, /api/graph BFFs
-- [ ] `D-DEDUPE-INSERT-01` Untracked log artifact in repo
-- [ ] `D-ENQUEUE-CONTRACT-01` /enqueue uses query param vs plan
+- [x] `D-DEDUPE-INSERT-01` Untracked log artifact in repo — N/A 2026-05-30, file never existed in working tree
+- [x] `D-ENQUEUE-CONTRACT-01` /enqueue uses query param vs plan — fixed 2026-05-30, switched to JSON body
 - [ ] `D-RECHARTS-01` recharts not installed (skip until Phase 2)
 - [ ] `D-BLACK-01` black not installed (no action; ruff format used)
 
