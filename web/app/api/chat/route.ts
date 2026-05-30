@@ -25,8 +25,9 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       question: body.question,
       user_id: user.id,
+      thread_id: body.thread_id ?? null,
       document_id: body.document_id ?? null,
-      scope: body.scope ?? "document",
+      scope: body.scope ?? "all",
     }),
   });
 
@@ -36,12 +37,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Chat failed" }, { status: 502 });
   }
 
-  // Stream SSE through to the client
-  return new Response(res.body, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+  // Stream SSE through to the client, including X-Thread-Id header
+  const threadId = res.headers.get("X-Thread-Id");
+  const headers: Record<string, string> = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+  };
+  if (threadId) {
+    headers["X-Thread-Id"] = threadId;
+  }
+
+  return new Response(res.body, { headers });
 }

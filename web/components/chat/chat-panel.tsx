@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState, type KeyboardEvent } from "react";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Database, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -12,27 +12,85 @@ interface ChatMessage {
 }
 
 interface Citation {
-  index: number;
-  chunk_id: string;
-  chunk_index: number;
+  type: "kg_fact" | "chunk" | "citation";
+  // KG fact fields
+  entity_id?: string;
+  field_name?: string;
+  source_document_id?: string;
+  // Chunk fields
+  chunk_id?: string;
   document_id?: string;
   filename?: string;
+  // Legacy
+  index?: number;
+  chunk_index?: number;
 }
 
 interface ChatPanelProps {
   documentId?: string;
   scope?: "document" | "all";
+  threadId?: string | null;
+  onThreadCreated?: (threadId: string) => void;
 }
 
-export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
+export function ChatPanel({
+  documentId,
+  scope = "document",
+  threadId: initialThreadId,
+  onThreadCreated,
+}: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [threadId, setThreadId] = useState<string | null>(initialThreadId ?? null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  // Load thread history when threadId changes
+  const loadHistory = useCallback(async (tid: string) => {
+    try {
+      const res = await fetch(`/api/threads/${tid}`);
+      if (res.ok) {
+        const history = await res.json();
+        setMessages(
+          history.map((m: { role: string; content: string; citations?: Citation[] }) => ({
+            role: m.role as "user" | "assistant",
+            content: m.content,
+            citations: m.citations ?? [],
+          })),
+        );
+      }
+    } catch {
+      // Ignore — start fresh
+    }
+  }, []);
+
+  // Allow parent to load a thread
+  const switchThread = useCallback(
+    (tid: string) => {
+      setThreadId(tid);
+      setMessages([]);
+      loadHistory(tid);
+    },
+    [loadHistory],
+  );
+
+  // Expose switchThread to parent via ref callback
+  // (or just use the prop pattern — parent passes threadId)
+  // We watch initialThreadId changes
+  const prevThreadRef = useRef(initialThreadId);
+  if (initialThreadId !== prevThreadRef.current) {
+    prevThreadRef.current = initialThreadId;
+    if (initialThreadId) {
+      switchThread(initialThreadId);
+    } else {
+      setThreadId(null);
+      setMessages([]);
+    }
+  }
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || streaming) return;
@@ -51,6 +109,7 @@ export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
+          thread_id: threadId,
           document_id: documentId ?? null,
           scope,
         }),
@@ -63,6 +122,13 @@ export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
         ]);
         setStreaming(false);
         return;
+      }
+
+      // Capture thread ID from response header
+      const newThreadId = res.headers.get("X-Thread-Id");
+      if (newThreadId && !threadId) {
+        setThreadId(newThreadId);
+        onThreadCreated?.(newThreadId);
       }
 
       // Add empty assistant message to stream into
@@ -90,7 +156,7 @@ export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
           try {
             const event = JSON.parse(json);
 
-            if (event.type === "citation") {
+            if (event.type === "citation" || event.type === "kg_fact" || event.type === "chunk") {
               citations.push(event);
             } else if (event.type === "text_delta") {
               assistantText += event.text;
@@ -132,7 +198,7 @@ export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
       setStreaming(false);
       scrollToBottom();
     }
-  }, [input, streaming, documentId, scope, scrollToBottom]);
+  }, [input, streaming, threadId, documentId, scope, scrollToBottom, onThreadCreated]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -167,19 +233,8 @@ export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
               <p className="whitespace-pre-wrap">{msg.content}</p>
               {msg.citations && msg.citations.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {msg.citations.map((c) => (
-                    <span
-                      key={c.index}
-                      className="inline-flex items-center rounded bg-background/50 px-1.5 py-0.5 text-xs"
-                      title={c.filename ?? `Chunk ${c.chunk_index}`}
-                    >
-                      [{c.index}]
-                      {c.filename && (
-                        <span className="ml-1 truncate max-w-[100px]">
-                          {c.filename}
-                        </span>
-                      )}
-                    </span>
+                  {msg.citations.map((c, ci) => (
+                    <CitationBadge key={ci} citation={c} index={ci + 1} />
                   ))}
                 </div>
               )}
@@ -213,5 +268,36 @@ export function ChatPanel({ documentId, scope = "document" }: ChatPanelProps) {
         </Button>
       </div>
     </div>
+  );
+}
+
+function CitationBadge({ citation, index }: { citation: Citation; index: number }) {
+  const isKgFact = citation.type === "kg_fact";
+  const label = isKgFact
+    ? `F${index}`
+    : `C${index}`;
+  const title = isKgFact
+    ? `KG Fact: ${citation.field_name ?? "fact"}`
+    : citation.filename ?? `Chunk`;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs ${
+        isKgFact
+          ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+          : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+      }`}
+      title={title}
+    >
+      {isKgFact ? (
+        <Database className="h-3 w-3" />
+      ) : (
+        <FileText className="h-3 w-3" />
+      )}
+      [{label}]
+      {!isKgFact && citation.filename && (
+        <span className="ml-0.5 truncate max-w-[80px]">{citation.filename}</span>
+      )}
+    </span>
   );
 }
