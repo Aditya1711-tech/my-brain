@@ -10,6 +10,7 @@ from app.config import settings
 from app.agents.classifier import ClassifierAgent, ClassifierInput
 from app.agents.extractor import ExtractorAgent, ExtractorInput
 from app.agents.schema_architect import SchemaArchitectAgent, SchemaArchitectInput
+from app.agents.summarizer import SummarizerAgent, SummarizerInput
 from app.agents.verifier import VerifierAgent, VerifierInput
 from app.services.pipeline.groundedness import check_groundedness
 from app.integrations.supabase_client import supabase
@@ -303,16 +304,19 @@ class PipelineOrchestrator:
         ]
         await fields_repo.bulk_insert(field_creates)
 
-        # Generate a summary from the extracted fields
-        summary_parts = [f"{f.name}: {f.value}" for f in output.fields if f.value]
-        summary = "; ".join(summary_parts[:10])
-        if summary:
+        # Generate LLM summary
+        summary_input = SummarizerInput(
+            document_type=doc_type,
+            text_sample=raw_text[:4000],
+        )
+        summary_output = await SummarizerAgent().run(summary_input, trace_id=trace_id)
+        if summary_output.summary:
             await self.db.execute(
                 sql_text("""
                     UPDATE documents SET summary = :summary, updated_at = now()
                     WHERE id = :doc_id
                 """),
-                {"summary": summary[:500], "doc_id": str(doc.id)},
+                {"summary": summary_output.summary[:500], "doc_id": str(doc.id)},
             )
             await self.db.commit()
 

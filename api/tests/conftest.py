@@ -166,6 +166,14 @@ def canned_knowledge_integrator():
     })
 
 
+@pytest.fixture
+def canned_summarizer():
+    """Canned SummaryOutput dict."""
+    return _make_anthropic_response("SummaryOutput", {
+        "summary": "Indian passport issued to John Doe (A1234567), born 15 Jan 1990.",
+    })
+
+
 # ---------------------------------------------------------------------------
 # Helper: build a sequence of canned responses for a full pipeline run
 # ---------------------------------------------------------------------------
@@ -175,6 +183,7 @@ def canned_pipeline_responses(
     canned_classifier,
     canned_schema_architect,
     canned_extractor,
+    canned_summarizer,
     canned_verifier,
     canned_knowledge_integrator,
 ):
@@ -183,6 +192,7 @@ def canned_pipeline_responses(
         canned_classifier,
         canned_schema_architect,
         canned_extractor,
+        canned_summarizer,
         canned_verifier,
         canned_knowledge_integrator,
     ]

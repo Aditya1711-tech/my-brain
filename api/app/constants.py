@@ -4,6 +4,7 @@ MODEL_SCHEMA_ARCHITECT = "claude-sonnet-4-6"
 MODEL_EXTRACTOR = "claude-sonnet-4-6"
 MODEL_VERIFIER = "claude-haiku-4-5-20251001"
 MODEL_KNOWLEDGE_INTEGRATOR = "claude-sonnet-4-6"
+MODEL_SUMMARIZER = "claude-haiku-4-5-20251001"
 MODEL_CHAT = "claude-sonnet-4-6"
 MODEL_EMBEDDINGS = "text-embedding-3-small"
 

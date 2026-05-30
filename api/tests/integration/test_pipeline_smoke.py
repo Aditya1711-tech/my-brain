@@ -290,16 +290,17 @@ async def test_verify_retries_ungrounded_field(
         "detected_entities": [],
     })
 
-    # Pipeline order: classifier, schema_architect, extractor,
+    # Pipeline order: classifier, schema_architect, extractor, summarizer,
     # verifier (retry), retry_extractor, verifier (accept), integrator
     responses = [
         canned_pipeline_responses[0],  # classifier
         canned_pipeline_responses[1],  # schema_architect
         canned_pipeline_responses[2],  # extractor
+        canned_pipeline_responses[3],  # summarizer
         verifier_with_retry,           # first verify → triggers retry
         retry_extractor,               # retry extractor
         verifier_after_retry,          # second verify → accepts
-        canned_pipeline_responses[4],  # knowledge integrator
+        canned_pipeline_responses[5],  # knowledge integrator
     ]
     mock_create_message.side_effect = responses
 
