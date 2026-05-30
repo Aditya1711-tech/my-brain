@@ -8,12 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01) — 2026-05-30
+- [x] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01)
+- [ ] `P1.5-D5-INTEG-01` LOW-class cleanup (D-BFF-FOLDERS-01, D-DEDUPE-INSERT-01, D-ENQUEUE-CONTRACT-01)
 
 ## Blockers
 
@@ -31,6 +31,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D5-CHAT-07` Citation unification verified + persistence fix (D-CITATIONS-01, 5 tests) — 2026-05-30
 - [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01, 5 tests) — 2026-05-30
 - [x] `P1.5-D4-BENCH-04` Chat quality eval (15 tests) — 2026-05-30
 - [x] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01, 11 tests) — 2026-05-30
@@ -103,7 +104,7 @@ _(none yet)_
 
 ### Day 5 — Polish, eval, final benchmark, tag
 - [x] `P1.5-D5-HARNESS-14` Bulk insert in extracted_fields_repo (D-AGENT-INSERT-01) — 2026-05-30
-- [ ] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01)
+- [x] `P1.5-D5-CHAT-07` Citation unification verified (D-CITATIONS-01) — 2026-05-30
 - [ ] `P1.5-D5-INTEG-01` LOW-class cleanup (D-BFF-FOLDERS-01, D-DEDUPE-INSERT-01, D-ENQUEUE-CONTRACT-01)
 - [ ] `P1.5-D5-BENCH-05` Final benchmark
 - [ ] `P1.5-D5-INTEG-02` End-to-end smoke test
@@ -136,7 +137,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 - [x] `D-VECTORIZER-TRACE-01` Vectorization not traced — fixed 2026-05-26, Langfuse span in vectorizer
 - [x] `D-AGENT-INSERT-01` Field inserts not batched — fixed 2026-05-30, multi-row INSERT, test_bulk_insert.py (5 tests)
 - [x] `D-SUMMARY-01` summary is deterministic, not LLM — fixed 2026-05-30, SummarizerAgent (Haiku)
-- [ ] `D-CITATIONS-01` Citations don't include KG facts
+- [x] `D-CITATIONS-01` Citations don't include KG facts — fixed 2026-05-30, _stream_and_persist type check corrected, test_fusion.py (5 new tests)
 
 ### LOW (do if time)
 - [ ] `D-BFF-FOLDERS-01` Missing /api/folders, /api/tags, /api/graph BFFs
