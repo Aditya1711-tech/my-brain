@@ -8,12 +8,11 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
+- [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
 - [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
 
 ## Blockers
@@ -32,6 +31,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
 - [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
 - [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
@@ -79,7 +79,7 @@ _(none yet)_
 - [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
-- [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
+- [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
 - [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
 
 ### Day 4 — Hybrid chat + JWT auth

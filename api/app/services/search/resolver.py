@@ -8,7 +8,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants import MODEL_CLASSIFIER
-from app.integrations.anthropic_client import client as anthropic_client
+from app.integrations.anthropic_client import create_message
 from app.services.search.vocab_cache import VocabCache
 
 logger = structlog.get_logger()
@@ -200,7 +200,7 @@ class SearchResolver:
         )
 
         try:
-            response = await anthropic_client.messages.create(
+            response = await create_message(
                 model=MODEL_CLASSIFIER,
                 max_tokens=256,
                 messages=[{"role": "user", "content": prompt}],
