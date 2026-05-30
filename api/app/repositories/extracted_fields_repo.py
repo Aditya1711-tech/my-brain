@@ -29,30 +29,31 @@ class ExtractedFieldsRepo:
         self.db = db
 
     async def bulk_insert(self, fields: list[ExtractedFieldCreate]) -> None:
-        """Insert multiple extracted fields at once."""
+        """Insert multiple extracted fields in a single multi-row statement."""
         if not fields:
             return
 
-        for f in fields:
-            await self.db.execute(
-                text("""
-                    INSERT INTO extracted_fields
-                        (user_id, document_id, field_name, field_value, field_type,
-                         confidence, is_entity_ref)
-                    VALUES
-                        (:user_id, :document_id, :field_name, :field_value, :field_type,
-                         :confidence, :is_entity_ref)
-                """),
-                {
-                    "user_id": str(f.user_id),
-                    "document_id": str(f.document_id),
-                    "field_name": f.field_name,
-                    "field_value": f.field_value,
-                    "field_type": f.field_type,
-                    "confidence": f.confidence,
-                    "is_entity_ref": f.is_entity_ref,
-                },
+        value_rows = []
+        params: dict = {}
+        for i, f in enumerate(fields):
+            value_rows.append(
+                f"(:uid_{i}, :did_{i}, :fn_{i}, :fv_{i}, :ft_{i}, :c_{i}, :ie_{i})"
             )
+            params[f"uid_{i}"] = str(f.user_id)
+            params[f"did_{i}"] = str(f.document_id)
+            params[f"fn_{i}"] = f.field_name
+            params[f"fv_{i}"] = f.field_value
+            params[f"ft_{i}"] = f.field_type
+            params[f"c_{i}"] = f.confidence
+            params[f"ie_{i}"] = f.is_entity_ref
+
+        sql = (
+            "INSERT INTO extracted_fields"
+            " (user_id, document_id, field_name, field_value, field_type,"
+            " confidence, is_entity_ref)"
+            f" VALUES {', '.join(value_rows)}"
+        )
+        await self.db.execute(text(sql), params)
         await self.db.commit()
 
     async def get_by_document(
