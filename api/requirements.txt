@@ -26,6 +26,9 @@ python-docx
 Pillow
 pytesseract
 
+# Auth
+PyJWT
+
 # Supabase
 supabase
 

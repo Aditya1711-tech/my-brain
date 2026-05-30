@@ -11,20 +11,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    return NextResponse.json({ error: "No session" }, { status: 401 });
+  }
+
   const body = await req.json();
 
   const apiUrl = process.env.APP_API_URL ?? "http://localhost:8000";
-  const apiKey = process.env.BACKEND_API_KEY;
 
   const res = await fetch(`${apiUrl}/chat`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": apiKey ?? "",
+      Authorization: `Bearer ${session.access_token}`,
     },
     body: JSON.stringify({
       question: body.question,
-      user_id: user.id,
       thread_id: body.thread_id ?? null,
       document_id: body.document_id ?? null,
       scope: body.scope ?? "all",

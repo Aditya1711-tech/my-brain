@@ -12,7 +12,7 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from app.deps import DbSession
+from app.deps import DbSession, VerifiedUser
 from app.repositories.chat_repo import ChatRepo
 from app.services.chat.fusion import fuse
 from app.services.chat.kg_retriever import resolve_entities, retrieve as kg_retrieve
@@ -30,16 +30,14 @@ router = APIRouter()
 
 class ChatRequest(BaseModel):
     question: str
-    user_id: str
     thread_id: str | None = None  # None = create new thread
     document_id: str | None = None
     scope: str = "all"  # "all" or "document"
 
 
 @router.post("/chat")
-async def chat(req: ChatRequest, db: DbSession) -> StreamingResponse:
+async def chat(req: ChatRequest, db: DbSession, user_id: VerifiedUser) -> StreamingResponse:
     """Stream a chat response with hybrid KG+vector retrieval and citations."""
-    user_id = UUID(req.user_id)
     chat_repo = ChatRepo(db)
 
     # 1. Resolve or create thread

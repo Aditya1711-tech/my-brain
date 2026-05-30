@@ -5,7 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app.deps import DbSession
+from app.deps import DbSession, VerifiedUser
 
 router = APIRouter()
 
@@ -13,7 +13,6 @@ router = APIRouter()
 class SearchRequest(BaseModel):
     term: str | None = None
     chips: list[dict] = []
-    user_id: str
 
 
 class SearchResponse(BaseModel):
@@ -22,12 +21,10 @@ class SearchResponse(BaseModel):
 
 
 @router.post("/search", response_model=SearchResponse)
-async def search(req: SearchRequest, db: DbSession) -> SearchResponse:
+async def search(req: SearchRequest, db: DbSession, user_id: VerifiedUser) -> SearchResponse:
     """Resolve a search term into a chip and return filtered documents."""
     from app.services.search.resolver import SearchResolver
     from app.services.search.query import search_documents
-
-    user_id = UUID(req.user_id)
     chips = list(req.chips)
     new_chip = None
 

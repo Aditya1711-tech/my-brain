@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 const apiUrl = process.env.APP_API_URL ?? "http://localhost:8000";
-const apiKey = process.env.BACKEND_API_KEY ?? "";
 
 export async function GET() {
   const supabase = await createClient();
@@ -14,13 +13,23 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const res = await fetch(
-    `${apiUrl}/threads?user_id=${encodeURIComponent(user.id)}`,
-    { headers: { "X-API-Key": apiKey } },
-  );
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    return NextResponse.json({ error: "No session" }, { status: 401 });
+  }
+
+  const res = await fetch(`${apiUrl}/threads`, {
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
 
   if (!res.ok) {
-    return NextResponse.json({ error: "Failed to list threads" }, { status: 502 });
+    return NextResponse.json(
+      { error: "Failed to list threads" },
+      { status: 502 },
+    );
   }
 
   const threads = await res.json();
