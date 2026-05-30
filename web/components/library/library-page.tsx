@@ -33,7 +33,7 @@ export function LibraryPage() {
   }, []);
 
   useEffect(() => {
-    loadDocuments();
+    loadDocuments(); // eslint-disable-line react-hooks/set-state-in-effect -- initial data fetch
   }, [loadDocuments]);
 
   // Live updates via Supabase Realtime

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { createClient } from "@/lib/supabase/client";
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MIME_TO_FILE_TYPE } from "@/lib/constants";
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from "@/lib/constants";
 import { computeFileHash } from "@/lib/utils/file";
 import { Upload, FileUp, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";

@@ -2,7 +2,7 @@
 
 import { useState, type KeyboardEvent } from "react";
 import { type User } from "@supabase/supabase-js";
-import { Brain, Search, X } from "lucide-react";
+import { Brain, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { Send, Loader2, Database, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,19 +78,19 @@ export function ChatPanel({
     [loadHistory],
   );
 
-  // Expose switchThread to parent via ref callback
-  // (or just use the prop pattern — parent passes threadId)
-  // We watch initialThreadId changes
+  // Sync with parent's initialThreadId changes
   const prevThreadRef = useRef(initialThreadId);
-  if (initialThreadId !== prevThreadRef.current) {
-    prevThreadRef.current = initialThreadId;
-    if (initialThreadId) {
-      switchThread(initialThreadId);
-    } else {
-      setThreadId(null);
-      setMessages([]);
+  useEffect(() => {
+    if (initialThreadId !== prevThreadRef.current) {
+      prevThreadRef.current = initialThreadId;
+      if (initialThreadId) {
+        switchThread(initialThreadId); // eslint-disable-line react-hooks/set-state-in-effect -- sync with parent prop
+      } else {
+        setThreadId(null);
+        setMessages([]);
+      }
     }
-  }
+  }, [initialThreadId, switchThread]);
 
   const sendMessage = useCallback(async () => {
     if (!input.trim() || streaming) return;

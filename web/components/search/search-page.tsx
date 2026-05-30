@@ -81,7 +81,7 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
   // Handle initial query from URL
   useEffect(() => {
     if (initialQuery) {
-      runSearch([], initialQuery);
+      runSearch([], initialQuery); // eslint-disable-line react-hooks/set-state-in-effect -- initial URL query
     }
   }, [initialQuery, runSearch]);
 

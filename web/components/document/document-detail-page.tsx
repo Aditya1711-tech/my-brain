@@ -155,7 +155,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   }, [documentId]);
 
   useEffect(() => {
-    loadDocument();
+    loadDocument(); // eslint-disable-line react-hooks/set-state-in-effect -- initial data fetch
   }, [loadDocument]);
 
   // Realtime updates for this document
@@ -256,7 +256,6 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
               variant="outline"
               size="sm"
               onClick={async () => {
-                const apiUrl = process.env.NEXT_PUBLIC_APP_API_URL ?? "";
                 try {
                   await fetch(`/api/documents/retry`, {
                     method: "POST",

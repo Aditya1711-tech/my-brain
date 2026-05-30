@@ -16,6 +16,9 @@ interface EntityNode {
   canonical_name: string;
   entity_type: string;
   doc_count: number;
+  // Added by react-force-graph at runtime
+  x?: number;
+  y?: number;
 }
 
 interface RelationshipLink {
@@ -116,7 +119,7 @@ export function GraphPage() {
   }, []);
 
   useEffect(() => {
-    loadGraph();
+    loadGraph(); // eslint-disable-line react-hooks/set-state-in-effect -- initial data fetch
   }, [loadGraph]);
 
   const handleNodeClick = useCallback(async (node: EntityNode) => {
@@ -214,24 +217,25 @@ export function GraphPage() {
         width={dimensions.width}
         height={dimensions.height}
         graphData={graphData}
-        nodeLabel={(node: EntityNode) => node.canonical_name}
-        nodeColor={(node: EntityNode) => TYPE_COLORS[node.entity_type] ?? TYPE_COLORS.other}
-        nodeVal={(node: EntityNode) => Math.max(2, node.doc_count * 3)}
-        linkLabel={(link: RelationshipLink) => link.relation_type.replace(/_/g, " ")}
+        nodeLabel={(node) => (node as EntityNode).canonical_name}
+        nodeColor={(node) => TYPE_COLORS[(node as EntityNode).entity_type] ?? TYPE_COLORS.other}
+        nodeVal={(node) => Math.max(2, (node as EntityNode).doc_count * 3)}
+        linkLabel={(link) => (link as unknown as RelationshipLink).relation_type.replace(/_/g, " ")}
         linkColor={() => "#d1d5db"}
         linkDirectionalArrowLength={4}
         linkDirectionalArrowRelPos={1}
-        onNodeClick={(node: EntityNode) => handleNodeClick(node)}
-        nodeCanvasObject={(node: EntityNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-          const label = node.canonical_name;
+        onNodeClick={(node) => handleNodeClick(node as EntityNode)}
+        nodeCanvasObject={(node, ctx, globalScale) => {
+          const n = node as EntityNode;
+          const label = n.canonical_name;
           const fontSize = 12 / globalScale;
           ctx.font = `${fontSize}px Sans-Serif`;
-          const color = TYPE_COLORS[node.entity_type] ?? TYPE_COLORS.other;
-          const size = Math.max(4, (node.doc_count ?? 0) * 2 + 4);
+          const color = TYPE_COLORS[n.entity_type] ?? TYPE_COLORS.other;
+          const size = Math.max(4, (n.doc_count ?? 0) * 2 + 4);
 
           // Draw node circle
           ctx.beginPath();
-          ctx.arc(node.x ?? 0, node.y ?? 0, size, 0, 2 * Math.PI);
+          ctx.arc(n.x ?? 0, n.y ?? 0, size, 0, 2 * Math.PI);
           ctx.fillStyle = color;
           ctx.fill();
 
@@ -239,7 +243,7 @@ export function GraphPage() {
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillStyle = "#374151";
-          ctx.fillText(label, node.x ?? 0, (node.y ?? 0) + size + fontSize);
+          ctx.fillText(label, n.x ?? 0, (n.y ?? 0) + size + fontSize);
         }}
       />
 

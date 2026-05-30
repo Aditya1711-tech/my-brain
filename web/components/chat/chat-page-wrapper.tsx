@@ -30,7 +30,7 @@ export function ChatPageWrapper() {
   }, []);
 
   useEffect(() => {
-    loadThreads();
+    loadThreads(); // eslint-disable-line react-hooks/set-state-in-effect -- initial data fetch
   }, [loadThreads]);
 
   const startNewThread = useCallback(() => {
