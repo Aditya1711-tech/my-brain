@@ -8,13 +8,13 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D4-CHAT-02` Question router — 2026-05-30
+- [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01, 19 tests) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
-- [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
+- [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
+- [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
 - [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
 - [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
 - [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
@@ -37,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01, 19 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-02` Question router (19 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 - [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
@@ -93,7 +94,7 @@ _(none yet)_
 ### Day 4 — Hybrid chat + JWT auth
 - [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 - [x] `P1.5-D4-CHAT-02` Question router — 2026-05-30
-- [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
+- [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
 - [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
 - [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
 - [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
@@ -118,7 +119,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 ### CRIT
 - [x] `D-AGENT-01` Agent singleton concurrency bug — fixed 2026-05-25, regression tests in test_agents_concurrency.py
 - [x] `D-RETRY-01` retry_count increments on first verifier pass — fixed 2026-05-25, regression tests in test_retry_count.py
-- [ ] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships
+- [x] `D-KG-CHAT-01` Cross-doc chat KG lookup keyword-only, ignores relationships — fixed 2026-05-30, KGRetriever with entity resolution + relationship traversal, test_kg_retriever.py (19 tests)
 - [ ] `D-AUTH-01` No JWT verification on /search and /chat
 - [x] `D-GROUND-01` No groundedness check — fixed 2026-05-26, test_groundedness.py (31 tests) + retry integration test
 
