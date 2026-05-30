@@ -8,13 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [ ] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01)
+- [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
 
-- [ ] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01)
 - [ ] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01)
 - [ ] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01)
 - [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
@@ -36,6 +35,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
 - [x] `P1.5-D3-HARNESS-11` Within-document parallelism — 2026-05-30
 - [x] `P1.5-D3-HARNESS-10` LLM summarizer agent (D-SUMMARY-01) — 2026-05-30
 - [x] `P1.5-D2-HARNESS-09` Verifier text-sample expansion (already in HARNESS-07) — 2026-05-26
@@ -77,7 +77,7 @@ _(none yet)_
 ### Day 3 — Parallelism + summarizer + cache
 - [x] `P1.5-D3-HARNESS-10` LLM summarizer agent (D-SUMMARY-01) — 2026-05-30
 - [x] `P1.5-D3-HARNESS-11` Within-document parallelism — 2026-05-30
-- [ ] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01)
+- [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
 - [ ] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01)
 - [ ] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01)
 - [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
@@ -116,7 +116,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 - [x] `D-GROUND-01` No groundedness check — fixed 2026-05-26, test_groundedness.py (31 tests) + retry integration test
 
 ### HIGH
-- [ ] `D-PIPELINE-01` Pipeline non-resumable due to in-memory state
+- [x] `D-PIPELINE-01` Pipeline non-resumable due to in-memory state — fixed 2026-05-30, processing_state JSONB + page images in Storage, test_pipeline_resumability.py (5 tests)
 - [x] `D-LLM-RETRY-01` No LLM API retry with backoff — fixed 2026-05-26
 - [ ] `D-CHAT-HISTORY-01` Chat stateless, no conversation history
 - [x] `D-VERIFIER-01` Verifier sees only 4000 chars — fixed 2026-05-26, expanded to 16000 in adaptive loop

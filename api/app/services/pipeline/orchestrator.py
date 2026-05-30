@@ -42,6 +42,7 @@ class PipelineOrchestrator:
         self.events_repo = EventsRepo(db)
         self.db = db
         self._vectorization_done = False
+        self._page_image_paths: list[str] = []
 
     async def run(self, doc_id: UUID) -> None:
         """Drive a document through the pipeline until ready or failed."""
@@ -51,6 +52,10 @@ class PipelineOrchestrator:
             return
 
         trace_id = str(doc_id)
+
+        # Hydrate from processing_state if resuming a partially-processed doc
+        if doc.status != "uploaded":
+            await self._load_processing_state(doc_id)
 
         while doc.status not in ("ready", "failed"):
             stage = STATUS_TO_STAGE.get(doc.status)
@@ -73,6 +78,8 @@ class PipelineOrchestrator:
                 await self._run_stage(doc, stage, trace_id)
                 duration_ms = int((time.monotonic() - start) * 1000)
 
+                # Persist state before status transition for crash resumability
+                await self._save_processing_state(doc_id)
                 await self.docs_repo.update_status(doc_id, next_stat)
                 await self.events_repo.insert(
                     user_id=doc.user_id,
@@ -137,6 +144,63 @@ class PipelineOrchestrator:
         else:
             logger.info("pipeline.stage_stub", stage=stage, doc_id=str(doc.id))
 
+    async def _save_processing_state(self, doc_id: UUID) -> None:
+        """Persist intermediate pipeline state for crash resumability."""
+        import json
+        from sqlalchemy import text as sql_text
+
+        state = {
+            "page_image_paths": self._page_image_paths,
+            "vectorization_done": self._vectorization_done,
+        }
+        await self.db.execute(
+            sql_text("""
+                UPDATE documents
+                SET processing_state = CAST(:state AS jsonb), updated_at = now()
+                WHERE id = :doc_id
+            """),
+            {"state": json.dumps(state), "doc_id": str(doc_id)},
+        )
+        await self.db.commit()
+
+    async def _load_processing_state(self, doc_id: UUID) -> None:
+        """Hydrate pipeline state from DB for crash recovery."""
+        import json
+        from types import SimpleNamespace
+        from sqlalchemy import text as sql_text
+
+        result = await self.db.execute(
+            sql_text("SELECT processing_state FROM documents WHERE id = :doc_id"),
+            {"doc_id": str(doc_id)},
+        )
+        row = result.fetchone()
+        if not row or not row[0]:
+            return
+
+        state = row[0] if isinstance(row[0], dict) else json.loads(row[0])
+
+        # Restore page images from Storage
+        self._page_image_paths = state.get("page_image_paths", [])
+        if self._page_image_paths:
+            page_images: list[bytes] = []
+            bucket_name = settings.supabase_storage_bucket
+            for path in self._page_image_paths:
+                try:
+                    img_bytes = supabase.storage.from_(bucket_name).download(path)
+                    page_images.append(img_bytes)
+                except Exception as exc:
+                    logger.warning(
+                        "pipeline.page_image_download_failed",
+                        doc_id=str(doc_id),
+                        path=path,
+                        error=str(exc),
+                    )
+            if page_images:
+                self._last_extraction = SimpleNamespace(page_images=page_images)
+
+        if state.get("vectorization_done"):
+            self._vectorization_done = True
+
     async def _extract_text(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Download file from Supabase storage and parse it."""
         logger.info("pipeline.extracting_text", doc_id=str(doc.id), storage_path=doc.storage_path)
@@ -160,6 +224,26 @@ class PipelineOrchestrator:
             {"raw_text": extraction.text, "doc_id": str(doc.id)},
         )
         await self.db.commit()
+
+        # Upload page images to Storage for crash resumability
+        self._page_image_paths = []
+        if extraction.page_images:
+            bucket_name = settings.supabase_storage_bucket
+            for idx, img_bytes in enumerate(extraction.page_images):
+                path = f"page-images/{doc.id}/page_{idx}.png"
+                try:
+                    supabase.storage.from_(bucket_name).upload(
+                        path, img_bytes,
+                        file_options={"content-type": "image/png", "upsert": "true"},
+                    )
+                    self._page_image_paths.append(path)
+                except Exception as exc:
+                    logger.warning(
+                        "pipeline.page_image_upload_failed",
+                        doc_id=str(doc.id),
+                        page_idx=idx,
+                        error=str(exc),
+                    )
 
         # Store extraction data for next stages
         self._last_extraction = extraction
