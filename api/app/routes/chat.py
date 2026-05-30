@@ -144,7 +144,7 @@ async def _stream_and_persist(
                 payload = json.loads(line[6:])
                 if payload.get("type") == "text_delta":
                     full_response.append(payload["text"])
-                elif payload.get("type") == "citation":
+                elif payload.get("type") in ("kg_fact", "chunk"):
                     citations.append(payload)
         except (json.JSONDecodeError, KeyError):
             pass
