@@ -65,7 +65,7 @@ class SearchResolver:
         return SearchChip(facet="content", value=term, display=term)
 
     async def _fuzzy_match(self, term: str) -> dict | None:
-        """Try trigram similarity match against entities and doc types."""
+        """Try trigram similarity match against entities, doc types, folders, tags, domains."""
         uid = str(self.user_id)
 
         # Entity name fuzzy match
@@ -106,6 +106,65 @@ class SearchResolver:
                 "facet": "doc_type",
                 "value": row[0],
                 "display": row[0].replace("_", " "),
+            }
+
+        # Folder name fuzzy match
+        result = await self.db.execute(
+            text("""
+                SELECT id, name, similarity(name, :term) AS sim
+                FROM folders
+                WHERE user_id = :uid AND similarity(name, :term) > 0.3
+                ORDER BY sim DESC
+                LIMIT 1
+            """),
+            {"uid": uid, "term": term},
+        )
+        row = result.fetchone()
+        if row:
+            return {
+                "facet": "folder",
+                "value": str(row[0]),
+                "display": row[1],
+            }
+
+        # Tag name fuzzy match
+        result = await self.db.execute(
+            text("""
+                SELECT id, name, similarity(name, :term) AS sim
+                FROM tags
+                WHERE user_id = :uid AND similarity(name, :term) > 0.3
+                ORDER BY sim DESC
+                LIMIT 1
+            """),
+            {"uid": uid, "term": term},
+        )
+        row = result.fetchone()
+        if row:
+            return {
+                "facet": "tag",
+                "value": str(row[0]),
+                "display": row[1],
+            }
+
+        # Domain fuzzy match
+        result = await self.db.execute(
+            text("""
+                SELECT DISTINCT domain, similarity(domain, :term) AS sim
+                FROM documents
+                WHERE user_id = :uid AND domain IS NOT NULL
+                  AND similarity(domain, :term) > 0.3
+                  AND deleted_at IS NULL
+                ORDER BY sim DESC
+                LIMIT 1
+            """),
+            {"uid": uid, "term": term},
+        )
+        row = result.fetchone()
+        if row:
+            return {
+                "facet": "domain",
+                "value": row[0],
+                "display": row[0],
             }
 
         return None

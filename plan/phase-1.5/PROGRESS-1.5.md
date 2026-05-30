@@ -8,12 +8,11 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
+- [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01)
 - [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
 - [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
 
@@ -33,6 +32,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
 - [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
 - [x] `P1.5-D3-HARNESS-11` Within-document parallelism — 2026-05-30
@@ -78,7 +78,7 @@ _(none yet)_
 - [x] `P1.5-D3-HARNESS-11` Within-document parallelism — 2026-05-30
 - [x] `P1.5-D3-HARNESS-12` Pipeline resumability (D-PIPELINE-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
-- [ ] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01)
+- [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
 - [ ] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps
 - [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
 
@@ -123,7 +123,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 
 ### MED
 - [x] `D-VOCAB-CACHE-01` VocabCache rebuilt per request — fixed 2026-05-30, process-level _VocabStore with 60s TTL, test_vocab_cache.py (5 tests)
-- [ ] `D-FUZZY-MATCH-01` Tier 2 fuzzy only entities + doc_types
+- [x] `D-FUZZY-MATCH-01` Tier 2 fuzzy covers entities, doc_types, folders, tags, domains — fixed 2026-05-30, test_fuzzy_match.py (7 tests)
 - [x] `D-VECTORIZER-TRACE-01` Vectorization not traced — fixed 2026-05-26, Langfuse span in vectorizer
 - [ ] `D-AGENT-INSERT-01` Field inserts not batched
 - [x] `D-SUMMARY-01` summary is deterministic, not LLM — fixed 2026-05-30, SummarizerAgent (Haiku)
