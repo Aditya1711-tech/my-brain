@@ -87,8 +87,10 @@ _TBD_
 
 - `0003` (2026-05-26): `extracted_fields` + `is_grounded`, `groundedness_method`, `importance`, `retry_budget`, `retry_budget_remaining`; `documents` + `processing_state` JSONB
 
+- `0004` (2026-05-30): `chat_threads` (scope, document_id, title) + `chat_messages` (thread_id, role, content, citations JSONB) + RLS on both
+
 ### Pending migrations
-- New: `chat_threads`, `chat_messages` + RLS
+_(none)_
 
 ## API endpoints added or changed
 

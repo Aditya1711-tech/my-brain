@@ -8,12 +8,18 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
+- [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
+- [ ] `P1.5-D4-CHAT-02` Question router
+- [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
+- [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
+- [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
+- [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
+- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
+- [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
 
 ## Blockers
 
@@ -31,6 +37,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 - [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
 - [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
@@ -80,10 +87,10 @@ _(none yet)_
 - [x] `P1.5-D3-SEARCH-01` VocabCache with TTL (D-VOCAB-CACHE-01) — 2026-05-30
 - [x] `P1.5-D3-SEARCH-02` Fuzzy match broader coverage (D-FUZZY-MATCH-01) — 2026-05-30
 - [x] `P1.5-D3-HARNESS-13` Anthropic + OpenAI semaphore caps — 2026-05-30
-- [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge
+- [ ] `P1.5-D3-BENCH-03` Mid-phase benchmark + merge (deferred — run after deploy)
 
 ### Day 4 — Hybrid chat + JWT auth
-- [ ] `P1.5-D4-CHAT-01` Schema for chat threads + messages
+- [x] `P1.5-D4-CHAT-01` Schema for chat threads + messages — 2026-05-30
 - [ ] `P1.5-D4-CHAT-02` Question router
 - [ ] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01)
 - [ ] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost)
@@ -147,3 +154,4 @@ Format: `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up
 2026-05-25 | day-1 | Bootstrap + baseline + D-AGENT-01 singleton fix + D-RETRY-01 retry_count fix | SETUP-01, BENCH-01, HARNESS-01, HARNESS-02 | HARNESS-03 (LLM retry with backoff)
 2026-05-26 | day-1 | LLM retry + test harness + Day 1 merge/tag | HARNESS-03, SETUP-02, SETUP-03 | Day 2 (HARNESS-04)
 2026-05-26 | day-2 | Schema migration, groundedness, adaptive retry, tracing, verifier expansion | HARNESS-04..09 | BENCH-02 (benchmark + merge)
+2026-05-30 | day-3 | Summarizer, parallelism, resumability, vocab cache, fuzzy match, semaphores | HARNESS-10..13, SEARCH-01..02 | BENCH-03 (deferred), Day 4 (CHAT-01)
