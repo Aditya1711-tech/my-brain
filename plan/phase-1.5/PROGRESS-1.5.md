@@ -8,15 +8,17 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost, 9 tests) — 2026-05-30
+- [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01, 13 tests) — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
+- [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
+- [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
+- [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
 - [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
 - [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost) — 2026-05-30
-- [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
+- [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01) — 2026-05-30
 - [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
 - [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
 - [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
@@ -37,6 +39,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01, 13 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost, 9 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01, 19 tests) — 2026-05-30
 - [x] `P1.5-D4-CHAT-02` Question router (19 tests) — 2026-05-30
@@ -97,7 +100,7 @@ _(none yet)_
 - [x] `P1.5-D4-CHAT-02` Question router — 2026-05-30
 - [x] `P1.5-D4-CHAT-03` KG retriever (D-KG-CHAT-01) — 2026-05-30
 - [x] `P1.5-D4-CHAT-04` Vector retriever upgrade (BM25 + entity boost) — 2026-05-30
-- [ ] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01)
+- [x] `P1.5-D4-CHAT-05` Fusion + responder with history (D-CHAT-HISTORY-01) — 2026-05-30
 - [ ] `P1.5-D4-CHAT-06` Chat threads BFF + frontend
 - [ ] `P1.5-D4-AUTH-01` JWT verification on /search /chat /threads (D-AUTH-01)
 - [ ] `P1.5-D4-BENCH-04` Chat quality eval + merge
@@ -127,7 +130,7 @@ Maps defect IDs to status. A defect is "closed" only when its regression test ex
 ### HIGH
 - [x] `D-PIPELINE-01` Pipeline non-resumable due to in-memory state — fixed 2026-05-30, processing_state JSONB + page images in Storage, test_pipeline_resumability.py (5 tests)
 - [x] `D-LLM-RETRY-01` No LLM API retry with backoff — fixed 2026-05-26
-- [ ] `D-CHAT-HISTORY-01` Chat stateless, no conversation history
+- [x] `D-CHAT-HISTORY-01` Chat stateless, no conversation history — fixed 2026-05-30, thread persistence + history replay in responder, test_fusion.py (13 tests)
 - [x] `D-VERIFIER-01` Verifier sees only 4000 chars — fixed 2026-05-26, expanded to 16000 in adaptive loop
 - [x] `D-VERIFIER-02` No re-verification after retry — fixed 2026-05-26, adaptive loop re-verifies after each retry
 
