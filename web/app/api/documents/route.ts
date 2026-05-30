@@ -85,9 +85,13 @@ export async function POST(req: Request) {
   const apiKey = process.env.BACKEND_API_KEY;
 
   try {
-    const enqueueRes = await fetch(`${apiUrl}/enqueue?doc_id=${doc.id}`, {
+    const enqueueRes = await fetch(`${apiUrl}/enqueue`, {
       method: "POST",
-      headers: { "X-API-Key": apiKey ?? "" },
+      headers: {
+        "X-API-Key": apiKey ?? "",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ doc_id: doc.id }),
     });
 
     if (!enqueueRes.ok) {
