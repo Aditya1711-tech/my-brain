@@ -8,12 +8,12 @@ Update at start AND end of every session. Use task IDs from `07-EXECUTION-PLAN-1
 
 > What's being worked on RIGHT NOW. One task. Replace when complete.
 
-- [x] `P1.5-D5-INTEG-02` Code-level smoke: 183 tests, 0 TS errors, 0 lint errors — 2026-05-30
+- [x] `P1.5-D5-INTEG-04` Final sweep + KNOWLEDGE update — 2026-05-30
 
 ## Up next
 
 > Queue for this session. Take from the top.
-- [ ] `P1.5-D5-INTEG-04` Final sweep + tag v1.1-phase-1.5
+_(Phase 1.5 code-complete. Remaining: deploy → benchmarks → demo recording → tag.)_
 
 ## Blockers
 
@@ -31,6 +31,7 @@ _(none yet)_
 
 > Last 10 tasks closed. Format: `[x] ID — description — YYYY-MM-DD HH:MM`. Prune older to KNOWLEDGE-1.5.md if long.
 
+- [x] `P1.5-D5-INTEG-04` Final sweep + KNOWLEDGE update — 2026-05-30
 - [x] `P1.5-D5-INTEG-02` Code-level smoke: 183 tests, 0 TS errors, 0 lint errors — 2026-05-30
 - [x] `P1.5-D5-INTEG-01` LOW-class cleanup: D-ENQUEUE-CONTRACT-01 (body), D-DEDUPE-INSERT-01 (N/A) — 2026-05-30
 - [x] `P1.5-D5-CHAT-07` Citation unification verified + persistence fix (D-CITATIONS-01, 5 tests) — 2026-05-30
@@ -110,8 +111,8 @@ _(none yet)_
 - [x] `P1.5-D5-INTEG-01` LOW-class cleanup — 2026-05-30
 - [ ] `P1.5-D5-BENCH-05` Final benchmark (deferred — run after deploy)
 - [x] `P1.5-D5-INTEG-02` End-to-end smoke test (code-level) — 2026-05-30
-- [ ] `P1.5-D5-INTEG-03` Demo recording
-- [ ] `P1.5-D5-INTEG-04` Final sweep + tag v1.1-phase-1.5
+- [ ] `P1.5-D5-INTEG-03` Demo recording (deferred — requires live deployment)
+- [x] `P1.5-D5-INTEG-04` Final sweep + KNOWLEDGE update — 2026-05-30
 
 ---
 
@@ -160,3 +161,5 @@ Format: `YYYY-MM-DD HH:MM | track | session description | tasks closed | next up
 2026-05-26 | day-1 | LLM retry + test harness + Day 1 merge/tag | HARNESS-03, SETUP-02, SETUP-03 | Day 2 (HARNESS-04)
 2026-05-26 | day-2 | Schema migration, groundedness, adaptive retry, tracing, verifier expansion | HARNESS-04..09 | BENCH-02 (benchmark + merge)
 2026-05-30 | day-3 | Summarizer, parallelism, resumability, vocab cache, fuzzy match, semaphores | HARNESS-10..13, SEARCH-01..02 | BENCH-03 (deferred), Day 4 (CHAT-01)
+2026-05-30 | day-4 | Hybrid chat full stack, JWT auth, chat quality eval | CHAT-01..06, AUTH-01, BENCH-04 | Day 5 (HARNESS-14)
+2026-05-30 | day-5 | Bulk insert, citation fix, enqueue contract, lint/TS cleanup, final sweep | HARNESS-14, CHAT-07, INTEG-01..02, INTEG-04 | Deploy → benchmarks → demo → tag
