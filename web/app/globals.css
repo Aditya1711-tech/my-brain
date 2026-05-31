@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-newsreader);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -39,83 +39,259 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: calc(var(--radius) * 0.4);
+  --radius-md: calc(var(--radius) * 0.6);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-2xl: calc(var(--radius) * 2);
 }
 
+/* =========================================================================
+   Trove · Font variables
+   ========================================================================= */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --trove-serif: var(--font-newsreader), "Newsreader", "Source Serif Pro", Georgia, serif;
+  --trove-sans:  var(--font-geist-sans), "Geist", "Inter", -apple-system, sans-serif;
+  --trove-mono:  var(--font-geist-mono), "Geist Mono", ui-monospace, monospace;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* =========================================================================
+   Trove · Raw Tokens
+   ========================================================================= */
+:root {
+  /* — Neutrals · Paper scale */
+  --trove-stone-50:  #F7F7F4;
+  --trove-stone-100: #EFEFEB;
+  --trove-stone-200: #E2E2DC;
+  --trove-stone-300: #C7C6BF;
+  --trove-stone-400: #97968D;
+  --trove-stone-500: #6C6B62;
+  --trove-stone-600: #4D4C44;
+  --trove-stone-700: #34332D;
+  --trove-stone-800: #22221D;
+  --trove-stone-900: #15140F;
+
+  /* — Vault Teal · primary accent */
+  --trove-teal-50:   #E8EFEF;
+  --trove-teal-100:  #C8D8D8;
+  --trove-teal-200:  #97B6B7;
+  --trove-teal-300:  #5E8A8C;
+  --trove-teal-400:  #2F6669;
+  --trove-teal-500:  #1B4D52;
+  --trove-teal-600:  #143E43;
+  --trove-teal-700:  #0E2E32;
+
+  /* — Semantic status */
+  --trove-amber-50:  #F8EFD8;
+  --trove-amber-200: #E8C879;
+  --trove-amber-500: #B8821E;
+  --trove-amber-700: #7A5212;
+
+  --trove-sage-50:   #E7F0EA;
+  --trove-sage-200:  #A6C8B0;
+  --trove-sage-500:  #2D6A4F;
+  --trove-sage-700:  #1B4A35;
+
+  --trove-clay-50:   #F8E6E0;
+  --trove-clay-200:  #E0A595;
+  --trove-clay-500:  #A0341D;
+  --trove-clay-700:  #6E2113;
+
+  /* — Shadows */
+  --trove-shadow-sm: 0 1px 2px 0 rgba(30,27,23,0.05), 0 1px 0 0 rgba(30,27,23,0.02);
+  --trove-shadow-md: 0 2px 4px -1px rgba(30,27,23,0.06), 0 4px 12px -2px rgba(30,27,23,0.04);
+  --trove-shadow-lg: 0 8px 24px -8px rgba(30,27,23,0.10), 0 2px 6px -1px rgba(30,27,23,0.05);
+
+  /* =========================================================================
+     Shadcn semantic tokens → Trove values
+     ========================================================================= */
+  --background:          var(--trove-stone-50);
+  --foreground:          var(--trove-stone-900);
+  --card:                #FFFFFF;
+  --card-foreground:     var(--trove-stone-900);
+  --popover:             #FFFFFF;
+  --popover-foreground:  var(--trove-stone-900);
+  --primary:             var(--trove-teal-500);
+  --primary-foreground:  var(--trove-stone-50);
+  --secondary:           var(--trove-stone-100);
+  --secondary-foreground: var(--trove-stone-800);
+  --muted:               var(--trove-stone-100);
+  --muted-foreground:    var(--trove-stone-500);
+  --accent:              var(--trove-stone-100);
+  --accent-foreground:   var(--trove-stone-800);
+  --destructive:         var(--trove-clay-500);
+  --border:              var(--trove-stone-200);
+  --input:               var(--trove-stone-200);
+  --ring:                var(--trove-teal-400);
+  --chart-1:             var(--trove-teal-400);
+  --chart-2:             var(--trove-sage-500);
+  --chart-3:             var(--trove-amber-500);
+  --chart-4:             var(--trove-clay-500);
+  --chart-5:             var(--trove-stone-500);
+  --radius: 0.625rem;
+  --sidebar:             var(--trove-stone-100);
+  --sidebar-foreground:  var(--trove-stone-900);
+  --sidebar-primary:     var(--trove-teal-500);
+  --sidebar-primary-foreground: var(--trove-stone-50);
+  --sidebar-accent:      var(--trove-stone-200);
+  --sidebar-accent-foreground: var(--trove-stone-800);
+  --sidebar-border:      var(--trove-stone-200);
+  --sidebar-ring:        var(--trove-teal-400);
 }
+
+/* =========================================================================
+   Trove · Role tokens (light surface — "paper")
+   ========================================================================= */
+:root {
+  --bg:           var(--trove-stone-50);
+  --bg-elevated:  #FFFFFF;
+  --bg-subtle:    var(--trove-stone-100);
+  --bg-sunken:    #EBEBE5;
+  --bg-canvas:    var(--trove-stone-50);
+
+  --fg:           var(--trove-stone-900);
+  --fg-strong:    var(--trove-stone-900);
+  --fg-muted:     var(--trove-stone-500);
+  --fg-subtle:    var(--trove-stone-400);
+  --fg-on-accent: var(--trove-stone-50);
+
+  --border:       var(--trove-stone-200);
+  --border-strong: var(--trove-stone-300);
+  --border-faint: rgba(30, 27, 23, 0.06);
+
+  --accent:        var(--trove-teal-500);
+  --accent-hover:  var(--trove-teal-600);
+  --accent-press:  var(--trove-teal-700);
+  --accent-soft:   var(--trove-teal-50);
+  --accent-ink:    var(--trove-teal-700);
+
+  --status-processing-bg:  var(--trove-amber-50);
+  --status-processing-fg:  var(--trove-amber-700);
+  --status-processing-dot: var(--trove-amber-500);
+  --status-ready-bg:       var(--trove-sage-50);
+  --status-ready-fg:       var(--trove-sage-700);
+  --status-ready-dot:      var(--trove-sage-500);
+  --status-error-bg:       var(--trove-clay-50);
+  --status-error-fg:       var(--trove-clay-700);
+  --status-error-dot:      var(--trove-clay-500);
+
+  --trove-entity-person: #2F6669;
+  --trove-entity-org:    #6B4FA0;
+  --trove-entity-place:  #B8821E;
+  --trove-entity-asset:  #2D6A4F;
+  --trove-entity-event:  #8B5A2B;
+
+  /* Motion */
+  --trove-ease-out:   cubic-bezier(0.22, 1, 0.36, 1);
+  --trove-ease-io:    cubic-bezier(0.65, 0, 0.35, 1);
+  --trove-dur-fast:   140ms;
+  --trove-dur-base:   220ms;
+  --trove-dur-slow:   480ms;
+  --trove-dur-stage:  700ms;
+}
+
+/* =========================================================================
+   Trove · Dark theme — "The Vault at night"
+   Apply with class="theme-dark" on a root element.
+   ========================================================================= */
+.theme-dark {
+  --bg:          #161619;
+  --bg-elevated: #1F1F24;
+  --bg-subtle:   #1B1B1F;
+  --bg-sunken:   #0E0E11;
+  --bg-canvas:   #131316;
+
+  --fg:          #ECEAE3;
+  --fg-strong:   #F8F6EF;
+  --fg-muted:    #908E86;
+  --fg-subtle:   #66645D;
+  --fg-on-accent:#072024;
+
+  --border:        rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-faint:  rgba(255, 255, 255, 0.05);
+
+  --accent:        #4FA6AB;
+  --accent-hover:  #5FB6BB;
+  --accent-press:  #3E9296;
+  --accent-soft:   rgba(79, 166, 171, 0.14);
+  --accent-ink:    #8FCBCE;
+
+  --status-processing-bg:  rgba(184, 130, 30, 0.16);
+  --status-processing-fg:  #E3B96A;
+  --status-processing-dot: #D9A949;
+  --status-ready-bg:       rgba(45, 106, 79, 0.18);
+  --status-ready-fg:       #74C79B;
+  --status-ready-dot:      #4FAE80;
+  --status-error-bg:       rgba(160, 52, 29, 0.18);
+  --status-error-fg:       #E0916F;
+  --status-error-dot:      #C9583A;
+
+  --trove-entity-person: #5FB6BB;
+  --trove-entity-org:    #A78BDB;
+  --trove-entity-place:  #E3B96A;
+  --trove-entity-asset:  #74C79B;
+  --trove-entity-event:  #C9956A;
+
+  --trove-shadow-sm: 0 1px 0 0 rgba(255,255,255,0.03) inset, 0 1px 2px 0 rgba(0,0,0,0.4);
+  --trove-shadow-md: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 4px 16px -4px rgba(0,0,0,0.5);
+  --trove-shadow-lg: 0 1px 0 0 rgba(255,255,255,0.05) inset, 0 16px 48px -12px rgba(0,0,0,0.6);
+
+  /* Shadcn semantic tokens — dark overrides */
+  --background:           #131316;
+  --foreground:           #F8F6EF;
+  --card:                 #1F1F24;
+  --card-foreground:      #F8F6EF;
+  --popover:              #1F1F24;
+  --popover-foreground:   #F8F6EF;
+  --primary:              #4FA6AB;
+  --primary-foreground:   #072024;
+  --secondary:            #1B1B1F;
+  --secondary-foreground: #ECEAE3;
+  --muted:                #1B1B1F;
+  --muted-foreground:     #908E86;
+  --border:               rgba(255, 255, 255, 0.09);
+  --input:                rgba(255, 255, 255, 0.09);
+  --ring:                 #4FA6AB;
+
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/* =========================================================================
+   Trove · Masonry board layout
+   ========================================================================= */
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 300px));
+  gap: 20px;
+  align-items: start;
+}
+
+.board-card {
+  width: 100%;
+}
+
+/* =========================================================================
+   Trove · Utility classes (from kit)
+   ========================================================================= */
+.k-row    { display: flex; align-items: center; gap: 8px; }
+.k-col    { display: flex; flex-direction: column; }
+.k-grow   { flex: 1 1 auto; min-width: 0; }
+.k-spacer { flex: 1 1 auto; }
+
+/* =========================================================================
+   Trove · Keyframe animations
+   ========================================================================= */
+@keyframes k-spin     { to { transform: rotate(360deg); } }
+@keyframes k-pulse    { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes k-fade-in  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes k-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes k-sheet-in { from { opacity: 0; transform: scale(0.985) translateY(8px); } to { opacity: 1; transform: none; } }
+
+.k-spin    { animation: k-spin 1.2s linear infinite; transform-origin: center; }
+.k-pulse   { animation: k-pulse 1.6s var(--trove-ease-out, ease-out) infinite; }
+.k-fade-in { animation: k-fade-in 220ms var(--trove-ease-out, ease-out) both; }
 
 @layer base {
   * {
@@ -126,5 +302,34 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Newsreader for headings */
+  h1, h2, h3 {
+    font-family: var(--font-newsreader), "Newsreader", Georgia, serif;
+  }
+
+  /* Focus ring */
+  *:focus-visible {
+    outline: 2px solid var(--trove-teal-400);
+    outline-offset: 2px;
+  }
+
+  /* Scrollbar — adapts to theme */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 999px;
+    border: 2px solid var(--bg);
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { opacity: 0.8; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

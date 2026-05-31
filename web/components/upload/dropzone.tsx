@@ -130,43 +130,56 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div
         {...getRootProps()}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors ${
-          isDragActive
-            ? "border-primary bg-primary/5"
-            : "border-muted-foreground/25 hover:border-muted-foreground/50"
-        }`}
+        className="flex cursor-pointer flex-col items-center justify-center rounded-[10px] border-2 border-dashed p-8 transition-colors"
+        style={{
+          borderColor: isDragActive ? "var(--accent)" : "var(--border-strong)",
+          background: isDragActive ? "var(--accent-soft)" : "transparent",
+        }}
       >
         <input {...getInputProps()} />
-        <Upload className="mb-2 h-8 w-8 text-muted-foreground" />
-        <p className="text-sm font-medium">
-          {isDragActive ? "Drop files here" : "Drag & drop files, or click to browse"}
+        <Upload
+          className="mb-3 h-7 w-7"
+          style={{ color: isDragActive ? "var(--accent-ink)" : "var(--fg-subtle)" }}
+        />
+        <p className="text-sm font-medium" style={{ color: "var(--fg-strong)" }}>
+          {isDragActive ? "Drop to add to your trove" : "Drag files here, or click to browse"}
         </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          PDF, images, DOCX, XLSX, PPTX, CSV, TXT (max 50MB)
+        <p className="mt-1 text-xs" style={{ color: "var(--fg-subtle)" }}>
+          PDF · images · DOCX · XLSX · PPTX · CSV · TXT · max 50 MB
         </p>
       </div>
 
       {/* Upload progress */}
       {files.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           {files.map((f, i) => (
             <div
               key={`${f.file.name}-${i}`}
-              className="flex items-center gap-3 rounded-md border px-3 py-2"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                borderRadius: 8,
+                border: "1px solid var(--border)",
+                padding: "8px 12px",
+                background: "var(--bg-elevated)",
+              }}
             >
-              <FileUp className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="flex-1 truncate text-sm">{f.file.name}</span>
+              <FileUp size={14} style={{ flexShrink: 0, color: "var(--fg-subtle)" }} />
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: "var(--fg)" }}>
+                {f.file.name}
+              </span>
               {f.status === "uploading" && (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                <Loader2 size={14} style={{ color: "var(--accent)", animation: "k-spin 1.2s linear infinite" }} />
               )}
               {f.status === "done" && (
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <CheckCircle2 size={14} style={{ color: "var(--status-ready-dot)" }} />
               )}
               {f.status === "error" && (
-                <XCircle className="h-4 w-4 text-red-500" />
+                <XCircle size={14} style={{ color: "var(--status-error-dot)" }} />
               )}
             </div>
           ))}

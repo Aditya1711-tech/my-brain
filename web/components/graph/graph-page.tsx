@@ -195,7 +195,7 @@ export function GraphPage() {
   }
 
   return (
-    <div className="relative h-full" ref={containerRef}>
+    <div className="relative h-full w-full" ref={containerRef}>
       <div className="absolute top-0 left-0 z-10 p-4">
         <h2 className="text-xl font-semibold">Knowledge Graph</h2>
         <p className="text-sm text-muted-foreground">
@@ -242,7 +242,7 @@ export function GraphPage() {
           // Draw label
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillStyle = "#374151";
+          ctx.fillStyle = "#E5E7EB";
           ctx.fillText(label, n.x ?? 0, (n.y ?? 0) + size + fontSize);
         }}
       />
