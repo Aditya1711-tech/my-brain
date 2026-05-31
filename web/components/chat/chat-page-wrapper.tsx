@@ -77,7 +77,12 @@ export function ChatPageWrapper() {
         </div>
         <div className="flex-1 overflow-y-auto">
           {threads.length === 0 && (
-            <p className="text-xs text-muted-foreground p-3">No conversations yet</p>
+            <div style={{ padding: "24px 16px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              <MessageSquare style={{ width: 24, height: 24, color: "var(--fg-subtle)", opacity: 0.5 }} />
+              <p style={{ fontFamily: "var(--trove-sans, sans-serif)", fontSize: 12, color: "var(--fg-muted)", lineHeight: 1.5 }}>
+                Start a new conversation to explore your documents
+              </p>
+            </div>
           )}
           {threads.map((thread) => (
             <button
@@ -107,9 +112,21 @@ export function ChatPageWrapper() {
       {/* Chat area */}
       <div className="flex-1 flex flex-col min-w-0">
         <div className="mb-2">
-          <h2 className="text-xl font-semibold">Chat</h2>
-          <p className="text-sm text-muted-foreground">
-            Ask anything about your documents. Answers are grounded in your knowledge graph and document content.
+          <h2
+            style={{
+              fontFamily: "var(--trove-serif, Georgia, serif)",
+              fontStyle: "italic",
+              fontWeight: 400,
+              fontSize: 28,
+              letterSpacing: "-0.015em",
+              color: "var(--fg-strong)",
+              marginBottom: 4,
+            }}
+          >
+            Ask your trove
+          </h2>
+          <p style={{ fontFamily: "var(--trove-sans, sans-serif)", fontSize: 13, color: "var(--fg-muted)" }}>
+            Answers are grounded in your documents and knowledge graph.
           </p>
         </div>
         <div className="flex-1 rounded-lg border min-h-0">
