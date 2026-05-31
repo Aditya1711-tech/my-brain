@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import dynamic from "next/dynamic";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Force graph must be client-side only (uses canvas)
@@ -41,18 +41,21 @@ interface EntityDetail {
   facts: { field_name: string; field_value: string }[];
 }
 
+// Use Trove entity design tokens (resolved at runtime via CSS var)
+// These must be hex for canvas drawing — we approximate with the token values
 const TYPE_COLORS: Record<string, string> = {
-  person: "#3b82f6",
-  organization: "#10b981",
-  asset: "#f59e0b",
-  location: "#8b5cf6",
-  other: "#6b7280",
+  person:       "#2F6669", // --trove-entity-person
+  organization: "#6B4FA0", // --trove-entity-org
+  asset:        "#2D6A4F", // --trove-entity-asset
+  location:     "#B8821E", // --trove-entity-place
+  other:        "#6C6B62", // --trove-stone-500
 };
 
 export function GraphPage() {
   const [graphData, setGraphData] = useState<GraphData>({ nodes: [], links: [] });
   const [loading, setLoading] = useState(true);
   const [selectedEntity, setSelectedEntity] = useState<EntityDetail | null>(null);
+  const [legendOpen, setLegendOpen] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
@@ -176,19 +179,70 @@ export function GraphPage() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div
+        className="flex h-full items-center justify-center"
+        style={{ flexDirection: "column", gap: 12 }}
+        aria-busy="true"
+        aria-label="Loading knowledge graph"
+      >
+        <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin" style={{ color: "var(--fg-muted)" }} />
+        <p style={{ fontSize: 13, color: "var(--fg-muted)", fontFamily: "var(--trove-sans, sans-serif)" }}>
+          Loading knowledge graph…
+        </p>
       </div>
     );
   }
 
   if (graphData.nodes.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-center">
-        <p className="text-xl font-semibold">No entities yet</p>
-        <p className="mt-2 text-muted-foreground max-w-sm">
-          Upload documents to start building your knowledge graph. Entities and
-          relationships will appear here as documents are processed.
+      <div
+        style={{
+          display: "flex",
+          height: "100%",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+          gap: 16,
+        }}
+      >
+        <div
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 20,
+            background: "var(--accent-soft)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--accent-ink)",
+          }}
+        >
+          <GitBranch size={32} strokeWidth={1.4} />
+        </div>
+        <h2
+          style={{
+            fontFamily: "var(--trove-serif, Georgia, serif)",
+            fontStyle: "italic",
+            fontWeight: 400,
+            fontSize: 32,
+            color: "var(--fg-strong)",
+            letterSpacing: "-0.015em",
+          }}
+        >
+          No connections yet
+        </h2>
+        <p
+          style={{
+            fontFamily: "var(--trove-sans, sans-serif)",
+            fontSize: 14,
+            color: "var(--fg-muted)",
+            maxWidth: 360,
+            lineHeight: 1.6,
+          }}
+        >
+          Upload and process documents to start building your knowledge graph.
+          Entities and relationships will appear here automatically.
         </p>
       </div>
     );
@@ -203,14 +257,44 @@ export function GraphPage() {
         </p>
       </div>
 
-      {/* Legend */}
-      <div className="absolute top-0 right-0 z-10 p-4 flex gap-3">
-        {Object.entries(TYPE_COLORS).map(([type, color]) => (
-          <div key={type} className="flex items-center gap-1 text-xs">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-            <span className="capitalize">{type}</span>
+      {/* Collapsible legend */}
+      <div style={{ position: "absolute", top: 0, right: 0, zIndex: 10, padding: 16, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+        <button
+          aria-label={legendOpen ? "Hide legend" : "Show legend"}
+          onClick={() => setLegendOpen(!legendOpen)}
+          style={{
+            fontSize: 11,
+            fontFamily: "var(--trove-mono, monospace)",
+            color: "var(--fg-muted)",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-faint)",
+            borderRadius: 6,
+            padding: "3px 8px",
+            cursor: "pointer",
+          }}
+        >
+          {legendOpen ? "Hide legend" : "Legend"}
+        </button>
+        {legendOpen && (
+          <div
+            className="k-fade-in"
+            style={{
+              display: "flex",
+              gap: 10,
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--border-faint)",
+              borderRadius: 8,
+              padding: "6px 10px",
+            }}
+          >
+            {Object.entries(TYPE_COLORS).map(([type, color]) => (
+              <div key={type} style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, fontFamily: "var(--trove-sans, sans-serif)", color: "var(--fg-muted)" }}>
+                <div style={{ width: 10, height: 10, borderRadius: 999, background: color, flexShrink: 0 }} />
+                <span style={{ textTransform: "capitalize" }}>{type}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
       <ForceGraph2D
@@ -247,93 +331,176 @@ export function GraphPage() {
         }}
       />
 
-      {/* Side Panel */}
+      {/* Entity detail side panel */}
       {selectedEntity && (
-        <div className="absolute top-0 right-0 h-full w-80 bg-background border-l shadow-lg z-20 overflow-y-auto">
-          <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-lg">{selectedEntity.canonical_name}</h3>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setSelectedEntity(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span
-                className="rounded-full px-2 py-0.5 text-xs font-medium text-white"
-                style={{
-                  backgroundColor:
-                    TYPE_COLORS[selectedEntity.entity_type] ?? TYPE_COLORS.other,
-                }}
-              >
-                {selectedEntity.entity_type}
-              </span>
-            </div>
-
-            {selectedEntity.aliases.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">
-                  Aliases
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {selectedEntity.aliases.map((alias, i) => (
-                    <span
-                      key={i}
-                      className="rounded bg-accent px-2 py-0.5 text-xs"
-                    >
-                      {alias}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {selectedEntity.facts.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">
-                  Facts
-                </p>
-                <div className="divide-y rounded border">
-                  {selectedEntity.facts.map((fact, i) => (
-                    <div key={i} className="flex justify-between p-2 text-sm">
-                      <span className="text-muted-foreground">
-                        {fact.field_name.replace(/_/g, " ")}
-                      </span>
-                      <span className="font-medium">{fact.field_value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {selectedEntity.documents.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-muted-foreground mb-1">
-                  Documents ({selectedEntity.documents.length})
-                </p>
-                <div className="space-y-1">
-                  {selectedEntity.documents.map((doc) => (
-                    <a
-                      key={`${doc.id}-${doc.role}`}
-                      href={`/document/${doc.id}`}
-                      className="block rounded border p-2 text-sm hover:bg-accent transition-colors"
-                    >
-                      <p className="font-medium truncate">
-                        {doc.original_filename}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{doc.role}</p>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <EntitySidePanel
+          entity={selectedEntity}
+          onClose={() => setSelectedEntity(null)}
+        />
       )}
+    </div>
+  );
+}
+
+function EntitySidePanel({ entity, onClose }: { entity: EntityDetail; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        height: "100%",
+        width: 320,
+        background: "var(--bg-elevated)",
+        borderLeft: "1px solid var(--border-faint)",
+        boxShadow: "var(--trove-shadow-lg)",
+        zIndex: 20,
+        overflowY: "auto",
+        animation: "k-slide-in-right 240ms var(--trove-ease-out, ease-out) both",
+      }}
+    >
+      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h3
+            style={{
+              fontFamily: "var(--trove-serif, Georgia, serif)",
+              fontStyle: "italic",
+              fontSize: 20,
+              fontWeight: 400,
+              color: "var(--fg-strong)",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {entity.canonical_name}
+          </h3>
+          <button
+            aria-label="Close entity panel"
+            onClick={onClose}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+            style={{
+              width: 28, height: 28, borderRadius: 7, border: 0,
+              background: "none", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              color: "var(--fg-muted)",
+              transition: "background var(--trove-dur-fast, 140ms)",
+            }}
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Entity type badge */}
+        <div>
+          <span
+            style={{
+              borderRadius: 999,
+              padding: "2px 10px",
+              fontSize: 11,
+              fontWeight: 600,
+              fontFamily: "var(--trove-mono, monospace)",
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              background: `${TYPE_COLORS[entity.entity_type] ?? TYPE_COLORS.other}22`,
+              color: TYPE_COLORS[entity.entity_type] ?? TYPE_COLORS.other,
+            }}
+          >
+            {entity.entity_type}
+          </span>
+        </div>
+
+        {entity.aliases.length > 0 && (
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--trove-mono, monospace)" }}>
+              Aliases
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {entity.aliases.map((alias, i) => (
+                <span
+                  key={i}
+                  style={{
+                    borderRadius: 6,
+                    padding: "2px 8px",
+                    fontSize: 12,
+                    background: "var(--bg-subtle)",
+                    border: "1px solid var(--border-faint)",
+                    color: "var(--fg-muted)",
+                    fontFamily: "var(--trove-sans, sans-serif)",
+                  }}
+                >
+                  {alias}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {entity.facts.length > 0 && (
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--trove-mono, monospace)" }}>
+              Facts
+            </p>
+            <div style={{ borderRadius: 8, border: "1px solid var(--border-faint)", overflow: "hidden" }}>
+              {entity.facts.map((fact, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "8px 12px",
+                    fontSize: 13,
+                    fontFamily: "var(--trove-sans, sans-serif)",
+                    borderBottom: i < entity.facts.length - 1 ? "1px solid var(--border-faint)" : "none",
+                  }}
+                >
+                  <span style={{ color: "var(--fg-muted)" }}>{fact.field_name.replace(/_/g, " ")}</span>
+                  <span style={{ color: "var(--fg-strong)", fontWeight: 500 }}>{fact.field_value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {entity.documents.length > 0 && (
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6, fontFamily: "var(--trove-mono, monospace)" }}>
+              Documents ({entity.documents.length})
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {entity.documents.map((doc) => (
+                <a
+                  key={`${doc.id}-${doc.role}`}
+                  href={`/document/${doc.id}`}
+                  style={{
+                    display: "block",
+                    borderRadius: 8,
+                    border: "1px solid var(--border-faint)",
+                    padding: "8px 12px",
+                    fontSize: 13,
+                    textDecoration: "none",
+                    fontFamily: "var(--trove-sans, sans-serif)",
+                    transition: "background var(--trove-dur-fast, 140ms)",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-subtle)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  <p style={{ fontWeight: 500, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {doc.original_filename}
+                  </p>
+                  <p style={{ fontSize: 11, color: "var(--fg-muted)", marginTop: 2 }}>{doc.role}</p>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
