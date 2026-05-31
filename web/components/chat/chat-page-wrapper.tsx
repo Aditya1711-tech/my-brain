@@ -16,6 +16,7 @@ interface Thread {
 export function ChatPageWrapper() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
+  const [threadLoading, setThreadLoading] = useState(false);
 
   const loadThreads = useCallback(async () => {
     try {
@@ -64,7 +65,8 @@ export function ChatPageWrapper() {
   );
 
   return (
-    <div className="h-[calc(100vh-3.5rem-3rem)] flex gap-4">
+    <div style={{ height: "100%", padding: "40px", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", gap: 16, minHeight: 0 }}>
       {/* Thread sidebar */}
       <div className="w-64 flex-shrink-0 flex flex-col border rounded-lg">
         <div className="p-3 border-b flex items-center justify-between">
@@ -81,9 +83,10 @@ export function ChatPageWrapper() {
             <button
               key={thread.id}
               onClick={() => setActiveThreadId(thread.id)}
+              disabled={threadLoading}
               className={`w-full text-left px-3 py-2 text-sm border-b hover:bg-muted/50 flex items-center gap-2 group ${
                 activeThreadId === thread.id ? "bg-muted" : ""
-              }`}
+              } ${threadLoading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               <MessageSquare className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
               <span className="flex-1 truncate">
@@ -115,8 +118,10 @@ export function ChatPageWrapper() {
             scope="all"
             threadId={activeThreadId}
             onThreadCreated={handleThreadCreated}
+            onLoadingChange={setThreadLoading}
           />
         </div>
+      </div>
       </div>
     </div>
   );
