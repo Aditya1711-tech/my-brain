@@ -262,13 +262,13 @@
    Trove · Masonry board layout
    ========================================================================= */
 .board {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 300px));
-  gap: 20px;
-  align-items: start;
+  columns: 260px;
+  column-gap: 20px;
 }
 
 .board-card {
+  break-inside: avoid;
+  margin-bottom: 20px;
   width: 100%;
 }
 

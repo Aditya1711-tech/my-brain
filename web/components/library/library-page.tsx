@@ -22,19 +22,6 @@ interface SearchChip {
   display: string;
 }
 
-// ── Pipeline stage order ────────────────────────────────────────────────────
-const PIPELINE_STAGES = [
-  "uploaded",
-  "extracting_text",
-  "classified",
-  "schema_built",
-  "extracted",
-  "verified",
-  "integrated",
-  "vectorized",
-  "ready",
-];
-
 const STAGE_LABELS: Record<string, string> = {
   uploaded: "Queued",
   extracting_text: "Extracting text",
@@ -73,19 +60,17 @@ const FACET_STYLES: Record<string, { bg: string; border: string; color: string; 
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
-/** Minimal paper-ish document thumbnail */
-function PaperThumb({ lines = 7, fileType }: { lines?: number; fileType: string }) {
+/** Minimal paper-ish document thumbnail — fills card edge-to-edge */
+function PaperThumb({ lines = 10, fileType }: { lines?: number; fileType: string }) {
   const color = DOC_TYPE_COLOR[fileType] ?? "var(--trove-teal-500)";
   return (
     <div
       style={{
         position: "relative",
-        background: "#F4F2EC",
-        borderRadius: 8,
-        padding: "10px 10px 8px",
-        aspectRatio: "1 / 0.9",
+        background: "#EDEAE2",
+        aspectRatio: "3 / 4",
         overflow: "hidden",
-        boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.04)",
+        padding: "16px 16px 12px",
       }}
     >
       {/* dog-ear */}
@@ -94,26 +79,27 @@ function PaperThumb({ lines = 7, fileType }: { lines?: number; fileType: string 
           position: "absolute",
           top: 0,
           right: 0,
-          width: 20,
-          height: 20,
-          background: "var(--bg-elevated, #1F1F24)",
+          width: 24,
+          height: 24,
+          background: "rgba(0,0,0,0.07)",
           clipPath: "polygon(100% 0, 0 0, 100% 100%)",
         }}
       />
       {/* header row */}
-      <div className="k-row" style={{ gap: 6, marginBottom: 10 }}>
-        <div style={{ width: 14, height: 14, borderRadius: 3, background: color, opacity: 0.85 }} />
-        <div style={{ height: 4, width: "44%", borderRadius: 2, background: "#312F2A" }} />
+      <div className="k-row" style={{ gap: 6, marginBottom: 14 }}>
+        <div style={{ width: 12, height: 12, borderRadius: 3, background: color, opacity: 0.65 }} />
+        <div style={{ height: 3.5, width: "42%", borderRadius: 2, background: "#1A1816", opacity: 0.18 }} />
       </div>
       {/* body lines */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 5.5 }}>
         {Array.from({ length: lines }).map((_, i) => (
           <div
             key={i}
             style={{
-              height: 3,
+              height: 2.5,
               borderRadius: 2,
-              background: "#C9C6BD",
+              background: "#1A1816",
+              opacity: 0.11,
               width: `${[92, 78, 88, 64, 84, 72, 90, 58, 80, 70, 86][i % 11]}%`,
             }}
           />
@@ -181,80 +167,30 @@ function StatusPill({ status, stageLabel }: { status: string; stageLabel?: strin
   );
 }
 
-/** Pipeline progress bar */
-function PipelineBar({ progress, color }: { progress: number; color: string }) {
-  return (
-    <div
-      style={{
-        height: 3,
-        width: "100%",
-        background: "var(--border-faint, rgba(255,255,255,0.05))",
-        borderRadius: 999,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          height: "100%",
-          width: `${progress}%`,
-          background: color,
-          borderRadius: 999,
-          transition: "width 700ms var(--trove-ease-out, ease-out)",
-        }}
-      />
-    </div>
-  );
-}
-
-/** Real thumbnail with PaperThumb fallback */
+/** Real thumbnail — natural height, fills card edge-to-edge */
 function DocThumbnail({ docId, fileType }: { docId: string; fileType: string }) {
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  if (failed) return <PaperThumb lines={7} fileType={fileType} />;
+  if (failed) return <PaperThumb fileType={fileType} />;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        aspectRatio: "4 / 3",
-        overflow: "hidden",
-        borderRadius: 8,
-        background: "#F4F2EC",
-      }}
-    >
+    <div style={{ background: "#EDEAE2", minHeight: loaded ? 0 : 160 }}>
       <img
         src={`/api/documents/${docId}/thumbnail`}
         alt=""
+        onLoad={() => setLoaded(true)}
         onError={() => setFailed(true)}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          objectPosition: "top center",
-          display: "block",
-        }}
+        style={{ width: "100%", height: "auto", display: "block" }}
       />
     </div>
   );
 }
 
-/** Individual document card — dark board style */
+/** Individual document card */
 function DocumentCard({ doc, onClick }: { doc: DocumentItem; onClick: () => void }) {
   const [hover, setHover] = useState(false);
-
   const isReady = doc.status === "ready";
-  const isFailed = doc.status === "failed";
-  const isQueued = doc.status === "uploaded";
-
-  const currentIdx = PIPELINE_STAGES.indexOf(doc.status);
-  const totalStages = PIPELINE_STAGES.length - 1;
-  const progress = isReady ? 100 : Math.max(8, (currentIdx / totalStages) * 100);
-
-  const barColor = isReady
-    ? "var(--status-ready-dot)"
-    : isFailed
-    ? "var(--status-error-dot)"
-    : "var(--accent)";
 
   return (
     <div
@@ -262,62 +198,53 @@ function DocumentCard({ doc, onClick }: { doc: DocumentItem; onClick: () => void
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        borderRadius: 14,
-        background: "var(--bg-elevated)",
-        border: "1px solid var(--border)",
+        borderRadius: 12,
         overflow: "hidden",
         cursor: "pointer",
-        transition: "transform var(--trove-dur-base, 220ms) var(--trove-ease-out, ease-out), border-color var(--trove-dur-fast, 140ms), box-shadow var(--trove-dur-base, 220ms)",
-        transform: hover ? "translateY(-3px)" : "none",
-        borderColor: hover ? "var(--border-strong)" : "var(--border)",
-        boxShadow: hover ? "var(--trove-shadow-md)" : "none",
+        background: "var(--bg-elevated)",
+        border: "1px solid",
+        borderColor: hover ? "var(--border-strong)" : "var(--border-faint)",
+        transition: "transform 200ms ease, border-color 140ms ease, box-shadow 200ms ease",
+        transform: hover ? "translateY(-2px)" : "none",
+        boxShadow: hover ? "0 8px 28px -8px rgba(0,0,0,0.5)" : "none",
       }}
     >
-      {/* Document thumbnail */}
-      <div style={{ padding: 8 }}>
-        <DocThumbnail docId={doc.id} fileType={doc.file_type} />
-      </div>
+      {/* Thumbnail — edge-to-edge, natural height */}
+      <DocThumbnail docId={doc.id} fileType={doc.file_type} />
 
-      {/* Card body */}
-      <div style={{ padding: "2px 16px 16px", display: "flex", flexDirection: "column", gap: 9 }}>
-        {/* Doc type */}
+      {/* Footer — type + name only */}
+      <div style={{ padding: "9px 12px 11px" }}>
         {doc.doc_type && (
-          <span
-            style={{
-              fontFamily: "var(--trove-mono, monospace)",
-              fontSize: 9.5,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              color: "var(--fg-subtle)",
-            }}
-          >
+          <div style={{
+            fontFamily: "var(--trove-mono, monospace)",
+            fontSize: 9,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "var(--fg-subtle)",
+            marginBottom: 3,
+          }}>
             {doc.doc_type.replace(/_/g, " ")}
-          </span>
+          </div>
         )}
-
-        {/* Filename */}
-        <h3
-          style={{
-            fontFamily: "var(--trove-serif, Georgia, serif)",
-            fontWeight: 500,
-            fontSize: 16,
-            lineHeight: 1.25,
-            color: "var(--fg-strong)",
-            letterSpacing: "-0.01em",
-            overflow: "hidden",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-          }}
-        >
+        <div style={{
+          fontSize: 13,
+          fontWeight: 450,
+          color: "var(--fg)",
+          lineHeight: 1.35,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}>
           {doc.original_filename.replace(/\.[^/.]+$/, "")}
-        </h3>
+        </div>
 
-        {/* Pipeline bar + status */}
-        {!isQueued && (
-          <PipelineBar progress={progress} color={barColor} />
+        {/* Status only for non-ready docs */}
+        {!isReady && (
+          <div style={{ marginTop: 7 }}>
+            <StatusPill status={doc.status} stageLabel={STAGE_LABELS[doc.status]} />
+          </div>
         )}
-        <StatusPill status={doc.status} stageLabel={STAGE_LABELS[doc.status]} />
       </div>
     </div>
   );
