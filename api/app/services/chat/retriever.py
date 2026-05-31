@@ -91,13 +91,15 @@ async def retrieve_cross_document_chunks(
     }
 
     if resolved_entity_ids:
-        boost_clause = """
+        eid_placeholders = ", ".join(f":eid_{i}" for i in range(len(resolved_entity_ids)))
+        boost_clause = f"""
             + CASE WHEN c.document_id IN (
                 SELECT document_id FROM document_entities
-                WHERE entity_id = ANY(CAST(:entity_ids AS uuid[]))
+                WHERE entity_id IN ({eid_placeholders})
               ) THEN :entity_boost ELSE 0.0 END
         """
-        params["entity_ids"] = "{" + ",".join(str(eid) for eid in resolved_entity_ids) + "}"
+        for i, eid in enumerate(resolved_entity_ids):
+            params[f"eid_{i}"] = str(eid)
         params["entity_boost"] = _ENTITY_BOOST
 
     result = await db.execute(

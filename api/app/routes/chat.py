@@ -4,7 +4,6 @@ Phase 1.5 rewrite: question router → entity resolution → parallel
 KG+vector retrieval → fusion → responder with thread history.
 """
 
-import asyncio
 from uuid import UUID
 
 import structlog
@@ -83,16 +82,11 @@ async def chat(req: ChatRequest, db: DbSession, user_id: VerifiedUser) -> Stream
         resolved = await resolve_entities(db, user_id, hint, history=history)
         entity_ids = [r.entity_id for r in resolved]
 
-        # Parallel KG + vector retrieval
-        kg_task = asyncio.create_task(
-            kg_retrieve(db, user_id, hint, resolved, history=history)
+        # Sequential KG + vector retrieval (same db session cannot run concurrent queries)
+        kg_facts = await kg_retrieve(db, user_id, hint, resolved, history=history)
+        chunks = await retrieve_cross_document_chunks(
+            db, user_id, req.question, resolved_entity_ids=entity_ids,
         )
-        vec_task = asyncio.create_task(
-            retrieve_cross_document_chunks(
-                db, user_id, req.question, resolved_entity_ids=entity_ids,
-            )
-        )
-        kg_facts, chunks = await asyncio.gather(kg_task, vec_task)
         context_items = fuse(kg_facts, chunks, hint)
 
     return StreamingResponse(
