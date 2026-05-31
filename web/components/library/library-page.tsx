@@ -7,6 +7,29 @@ import { useRouter } from "next/navigation";
 import { Dropzone } from "@/components/upload/dropzone";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
 
+// ── Skeleton card ────────────────────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div
+      style={{
+        borderRadius: 12,
+        overflow: "hidden",
+        background: "var(--bg-elevated)",
+        border: "1px solid var(--border-faint)",
+      }}
+    >
+      {/* Thumbnail skeleton */}
+      <div className="k-shimmer" style={{ aspectRatio: "3 / 4", width: "100%" }} />
+      {/* Footer skeleton */}
+      <div style={{ padding: "9px 12px 11px" }}>
+        <div className="k-shimmer" style={{ height: 8, width: "40%", borderRadius: 4, marginBottom: 6 }} />
+        <div className="k-shimmer" style={{ height: 12, width: "85%", borderRadius: 4, marginBottom: 4 }} />
+        <div className="k-shimmer" style={{ height: 12, width: "60%", borderRadius: 4 }} />
+      </div>
+    </div>
+  );
+}
+
 interface DocumentItem {
   id: string;
   original_filename: string;
@@ -129,6 +152,7 @@ function StatusPill({ status, stageLabel }: { status: string; stageLabel?: strin
 
   return (
     <span
+      aria-label={label}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -145,12 +169,14 @@ function StatusPill({ status, stageLabel }: { status: string; stageLabel?: strin
     >
       {key === "processing" ? (
         <Loader2
+          aria-hidden="true"
           size={10}
           strokeWidth={2}
           style={{ animation: "k-spin 1.2s linear infinite", flexShrink: 0 }}
         />
       ) : (
         <span
+          aria-hidden="true"
           className={key === "uploaded" ? "k-pulse" : ""}
           style={{
             width: 5,
@@ -189,24 +215,19 @@ function DocThumbnail({ docId, fileType }: { docId: string; fileType: string }) 
 
 /** Individual document card */
 function DocumentCard({ doc, onClick }: { doc: DocumentItem; onClick: () => void }) {
-  const [hover, setHover] = useState(false);
   const isReady = doc.status === "ready";
 
   return (
     <div
       onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      className="doc-card"
       style={{
         borderRadius: 12,
         overflow: "hidden",
         cursor: "pointer",
         background: "var(--bg-elevated)",
-        border: "1px solid",
-        borderColor: hover ? "var(--border-strong)" : "var(--border-faint)",
+        border: "1px solid var(--border-faint)",
         transition: "transform 200ms ease, border-color 140ms ease, box-shadow 200ms ease",
-        transform: hover ? "translateY(-2px)" : "none",
-        boxShadow: hover ? "0 8px 28px -8px rgba(0,0,0,0.5)" : "none",
       }}
     >
       {/* Thumbnail — edge-to-edge, natural height */}
@@ -313,6 +334,14 @@ function UploadDialog({
   onClose: () => void;
   onComplete: () => void;
 }) {
+  // Escape key to close
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [open, onClose]);
+
   if (!open) return null;
   return (
     <div
@@ -362,7 +391,10 @@ function UploadDialog({
             Add to trove
           </span>
           <button
+            aria-label="Close upload dialog"
             onClick={onClose}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
             style={{
               width: 32,
               height: 32,
@@ -374,9 +406,10 @@ function UploadDialog({
               border: 0,
               background: "none",
               cursor: "pointer",
+              transition: "background var(--trove-dur-fast, 140ms)",
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
@@ -536,6 +569,8 @@ function BoardSearchHeader({
 
 // ── Empty state ────────────────────────────────────────────────────────────
 function EmptyState({ onUpload }: { onUpload: () => void }) {
+  const [press, setPress] = useState(false);
+  const [hover, setHover] = useState(false);
   return (
     <div
       style={{
@@ -578,13 +613,17 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
       </p>
       <button
         onClick={onUpload}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => { setHover(false); setPress(false); }}
+        onMouseDown={() => setPress(true)}
+        onMouseUp={() => setPress(false)}
         style={{
           display: "inline-flex",
           alignItems: "center",
           gap: 8,
           padding: "10px 20px",
           borderRadius: 999,
-          background: "var(--accent)",
+          background: hover ? "var(--accent-hover)" : "var(--accent)",
           color: "var(--fg-on-accent)",
           border: 0,
           cursor: "pointer",
@@ -592,6 +631,9 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
           fontSize: 14,
           fontWeight: 600,
           marginTop: 8,
+          transform: press ? "scale(0.97)" : hover ? "translateY(-1px)" : "none",
+          boxShadow: hover && !press ? "0 6px 20px -6px rgba(0,0,0,0.4)" : "none",
+          transition: "background var(--trove-dur-fast, 140ms), transform var(--trove-dur-fast, 140ms), box-shadow var(--trove-dur-fast, 140ms)",
         }}
       >
         <Plus size={16} strokeWidth={2.5} />
@@ -688,8 +730,24 @@ export function LibraryPage() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", height: "100%", alignItems: "center", justifyContent: "center" }}>
-        <p style={{ color: "var(--fg-muted)", fontFamily: "var(--trove-sans, sans-serif)" }}>Loading…</p>
+      <div
+        aria-busy="true"
+        aria-label="Loading your library"
+        style={{ height: "100%", overflowY: "auto" }}
+      >
+        {/* Mimic the sticky header area */}
+        <div style={{ padding: "40px 40px 28px" }}>
+          <div className="k-shimmer" style={{ height: 56, width: "38%", borderRadius: 8 }} />
+        </div>
+        <div style={{ padding: "8px 40px 120px" }}>
+          <div className="board">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="board-card">
+                <SkeletonCard />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -746,8 +804,15 @@ export function LibraryPage() {
         {/* Document grid */}
         {displayDocs.length > 0 && (
           <div className="board">
-            {displayDocs.map((doc) => (
-              <div key={doc.id} className="board-card">
+            {displayDocs.map((doc, i) => (
+              <div
+                key={doc.id}
+                className="board-card"
+                style={{
+                  animation: "k-card-in 280ms var(--trove-ease-out, ease-out) both",
+                  animationDelay: `${Math.min(i * 40, 400)}ms`,
+                }}
+              >
                 <DocumentCard
                   doc={doc}
                   onClick={() => router.push(`/document/${doc.id}`)}
