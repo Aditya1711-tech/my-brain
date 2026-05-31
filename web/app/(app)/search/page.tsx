@@ -1,10 +1,5 @@
-import { SearchPage } from "@/components/search/search-page";
+import { redirect } from "next/navigation";
 
-export default async function Search({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q } = await searchParams;
-  return <SearchPage initialQuery={q} />;
+export default function Search() {
+  redirect("/");
 }

@@ -135,6 +135,7 @@ async def _hybrid_search(
                    1 - (c.embedding <=> CAST(:embedding AS vector)) AS similarity
             FROM chunks c
             WHERE c.user_id = :uid
+              AND (1 - (c.embedding <=> CAST(:embedding AS vector))) > 0.35
             ORDER BY c.embedding <=> CAST(:embedding AS vector)
             LIMIT 30
         """

@@ -22,15 +22,16 @@ interface DocumentResult {
   created_at: string;
 }
 
-const FACET_COLORS: Record<string, string> = {
-  file_type: "bg-blue-100 text-blue-800",
-  doc_type: "bg-purple-100 text-purple-800",
-  domain: "bg-green-100 text-green-800",
-  entity: "bg-orange-100 text-orange-800",
-  folder: "bg-yellow-100 text-yellow-800",
-  tag: "bg-pink-100 text-pink-800",
-  relation: "bg-cyan-100 text-cyan-800",
-  content: "bg-gray-100 text-gray-800",
+// Trove facet chip styles — inline styles to use design tokens
+const FACET_STYLES: Record<string, { bg: string; border: string; color: string; facetColor: string }> = {
+  file_type: { bg: "var(--trove-teal-50)",   border: "var(--trove-teal-100)",   color: "var(--trove-teal-700)",   facetColor: "var(--trove-teal-400)" },
+  doc_type:  { bg: "#ECE6F5",                 border: "#C9BBE0",                 color: "#43317A",                  facetColor: "#6B4FA0" },
+  domain:    { bg: "var(--trove-sage-50)",    border: "var(--trove-sage-200)",   color: "var(--trove-sage-700)",   facetColor: "var(--trove-sage-500)" },
+  entity:    { bg: "#ECE6F5",                 border: "#C9BBE0",                 color: "#43317A",                  facetColor: "#6B4FA0" },
+  folder:    { bg: "var(--trove-stone-100)", border: "var(--trove-stone-300)", color: "var(--trove-stone-700)", facetColor: "var(--trove-stone-500)" },
+  tag:       { bg: "#FBEAE5",                 border: "#F0C9BC",                 color: "var(--trove-clay-700)",   facetColor: "var(--trove-clay-500)" },
+  relation:  { bg: "var(--trove-teal-50)",   border: "var(--trove-teal-100)",   color: "var(--trove-teal-700)",   facetColor: "var(--trove-teal-400)" },
+  content:   { bg: "var(--trove-stone-100)", border: "var(--trove-stone-200)", color: "var(--trove-stone-700)", facetColor: "var(--trove-stone-500)" },
 };
 
 export function SearchPage({ initialQuery }: { initialQuery?: string }) {
@@ -114,55 +115,79 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Search</h2>
+    <div style={{ padding: "40px 40px 80px", display: "flex", flexDirection: "column", gap: 24 }}>
+      <h2
+        style={{
+          fontFamily: "var(--trove-serif, Georgia, serif)",
+          fontStyle: "italic",
+          fontWeight: 400,
+          fontSize: 44,
+          letterSpacing: "-0.02em",
+          color: "var(--fg-strong)",
+        }}
+      >
+        Search your trove
+      </h2>
 
       {/* Search input with chips */}
-      <div className="rounded-lg border p-3">
+      <div
+        style={{
+          borderRadius: 14,
+          border: "1px solid var(--border)",
+          background: "var(--bg-elevated)",
+          padding: 12,
+        }}
+      >
         <div className="flex flex-wrap items-center gap-2">
-          {chips.map((chip, i) => (
-            <span
-              key={i}
-              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${FACET_COLORS[chip.facet] ?? FACET_COLORS.content}`}
-            >
-              <span className="opacity-60">{chip.facet}:</span>
-              {chip.display}
-              <button
-                onClick={() => removeChip(i)}
-                className="ml-0.5 rounded-full hover:bg-black/10 p-0.5"
+          {chips.map((chip, i) => {
+            const s = FACET_STYLES[chip.facet] ?? FACET_STYLES.content;
+            return (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 rounded-full text-xs font-medium"
+                style={{ padding: "4px 4px 4px 10px", background: s.bg, border: `1px solid ${s.border}`, color: s.color }}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
+                <span style={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 10, color: s.facetColor }}>
+                  {chip.facet}
+                </span>
+                {chip.display}
+                <button
+                  onClick={() => removeChip(i)}
+                  className="inline-flex items-center justify-center rounded-full"
+                  style={{ width: 18, height: 18, color: "var(--trove-stone-400)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.06)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  <X className="h-2.5 w-2.5" />
+                </button>
+              </span>
+            );
+          })}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2 top-2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               ref={inputRef}
-              placeholder={
-                chips.length > 0
-                  ? "Add another filter..."
-                  : "Type a search term and press Enter..."
-              }
-              className="border-0 pl-8 shadow-none focus-visible:ring-0"
+              placeholder={chips.length > 0 ? "Add another filter…" : "Ask anything about your trove…"}
+              className="border-0 pl-8 shadow-none focus-visible:ring-0 text-sm"
               value={term}
               onChange={(e) => setTerm(e.target.value)}
               onKeyDown={handleKeyDown}
               autoFocus
             />
           </div>
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+          {loading && <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--trove-teal-400)" }} />}
         </div>
       </div>
 
-      {/* Results */}
+      {/* Empty results */}
       {searched && documents.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No documents found</p>
+          <p className="text-muted-foreground text-sm">Nothing matches that combination.</p>
           {chips.length > 0 && (
             <button
               onClick={() => removeChip(chips.length - 1)}
-              className="mt-2 text-sm text-blue-600 hover:underline"
+              className="mt-2 text-sm hover:underline"
+              style={{ color: "var(--trove-teal-600)" }}
             >
               Try removing the last filter
             </button>
@@ -170,30 +195,34 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
         </div>
       )}
 
+      {/* Results grid */}
       {documents.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {documents.map((doc) => (
             <div
               key={doc.id}
-              className="rounded-lg border p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+              className="rounded-[10px] border bg-card cursor-pointer transition-shadow"
+              style={{ padding: "14px 16px 12px" }}
               onClick={() => router.push(`/document/${doc.id}`)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--trove-shadow-md)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
             >
-              <p className="font-medium text-sm truncate">
+              <p className="font-medium text-sm truncate" style={{ color: "var(--trove-stone-900)" }}>
                 {doc.original_filename}
               </p>
               <div className="mt-2 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground uppercase">
+                <span className="text-[11px] font-mono uppercase tracking-wide" style={{ color: "var(--trove-stone-400)" }}>
                   {doc.file_type}
                 </span>
                 <StatusBadge status={doc.status} />
               </div>
               {doc.doc_type && (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="mt-1.5 text-[12px]" style={{ color: "var(--trove-stone-500)" }}>
                   {doc.doc_type.replace(/_/g, " ")}
                 </p>
               )}
               {doc.summary && (
-                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                <p className="mt-1 text-xs line-clamp-2" style={{ color: "var(--trove-stone-500)" }}>
                   {doc.summary}
                 </p>
               )}
@@ -206,15 +235,18 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    uploaded: "bg-yellow-100 text-yellow-800",
-    ready: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
+  const styles: Record<string, { bg: string; color: string }> = {
+    uploaded:   { bg: "var(--trove-stone-100)",  color: "var(--trove-stone-500)" },
+    ready:      { bg: "var(--trove-sage-50)",    color: "var(--trove-sage-700)" },
+    failed:     { bg: "var(--trove-clay-50)",    color: "var(--trove-clay-700)" },
   };
-  const color = colors[status] ?? "bg-blue-100 text-blue-800";
+  const s = styles[status] ?? { bg: "var(--trove-amber-50)", color: "var(--trove-amber-700)" };
 
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>
+    <span
+      className="rounded-full px-2 py-0.5 text-[11px] font-medium"
+      style={{ background: s.bg, color: s.color }}
+    >
       {status}
     </span>
   );
