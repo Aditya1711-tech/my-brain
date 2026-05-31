@@ -154,32 +154,69 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
 
       {/* Upload progress */}
       {files.length > 0 && (
-        <div className="space-y-1.5">
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {files.map((f, i) => (
             <div
               key={`${f.file.name}-${i}`}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
                 borderRadius: 8,
-                border: "1px solid var(--border)",
-                padding: "8px 12px",
+                border: "1px solid var(--border-faint)",
                 background: "var(--bg-elevated)",
+                overflow: "hidden",
+                animation: "k-fade-in 200ms var(--trove-ease-out, ease-out) both",
+                animationDelay: `${i * 50}ms`,
               }}
             >
-              <FileUp size={14} style={{ flexShrink: 0, color: "var(--fg-subtle)" }} />
-              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: "var(--fg)" }}>
-                {f.file.name}
-              </span>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 12px",
+                }}
+              >
+                <FileUp aria-hidden="true" size={14} style={{ flexShrink: 0, color: "var(--fg-subtle)" }} />
+                <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, color: "var(--fg)" }}>
+                  {f.file.name}
+                </span>
+                {f.status === "uploading" && (
+                  <Loader2 aria-hidden="true" size={14} style={{ color: "var(--accent)", animation: "k-spin 1.2s linear infinite", flexShrink: 0 }} />
+                )}
+                {f.status === "done" && (
+                  <CheckCircle2
+                    aria-hidden="true"
+                    size={14}
+                    style={{
+                      color: "var(--status-ready-dot)",
+                      flexShrink: 0,
+                      animation: "k-pulse 0.6s var(--trove-ease-out, ease-out) 1",
+                    }}
+                  />
+                )}
+                {f.status === "error" && (
+                  <XCircle aria-hidden="true" size={14} style={{ color: "var(--status-error-dot)", flexShrink: 0 }} />
+                )}
+              </div>
+              {/* Progress bar */}
               {f.status === "uploading" && (
-                <Loader2 size={14} style={{ color: "var(--accent)", animation: "k-spin 1.2s linear infinite" }} />
+                <div style={{ height: 2, background: "var(--bg-subtle)", width: "100%" }}>
+                  <div
+                    style={{
+                      height: "100%",
+                      background: "var(--accent)",
+                      width: `${f.progress}%`,
+                      transition: "width 300ms var(--trove-ease-out, ease-out)",
+                    }}
+                  />
+                </div>
               )}
               {f.status === "done" && (
-                <CheckCircle2 size={14} style={{ color: "var(--status-ready-dot)" }} />
+                <div style={{ height: 2, background: "var(--status-ready-dot)", width: "100%" }} />
               )}
-              {f.status === "error" && (
-                <XCircle size={14} style={{ color: "var(--status-error-dot)" }} />
+              {f.status === "error" && f.error && (
+                <p style={{ fontSize: 11, color: "var(--status-error-fg)", padding: "2px 12px 6px", fontFamily: "var(--trove-sans, sans-serif)" }}>
+                  {f.error}
+                </p>
               )}
             </div>
           ))}

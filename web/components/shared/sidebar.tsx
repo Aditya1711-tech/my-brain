@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
-  Library, MessageSquare, GitBranch, LayoutGrid,
+  Library, MessageSquare, GitBranch, Search,
   Settings, LogOut,
 } from "lucide-react";
 import {
@@ -19,10 +19,10 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
-  { href: "/",          label: "Library",      icon: Library },
-  { href: "/chat",      label: "Chat",         icon: MessageSquare },
-  { href: "/graph",     label: "Connections",  icon: GitBranch },
-  { href: "/spaces",    label: "Spaces",       icon: LayoutGrid },
+  { href: "/",       label: "Library",     icon: Library },
+  { href: "/search", label: "Search",      icon: Search },
+  { href: "/chat",   label: "Chat",        icon: MessageSquare },
+  { href: "/graph",  label: "Connections", icon: GitBranch },
 ];
 
 
@@ -179,30 +179,28 @@ export function Sidebar({ email }: SidebarProps) {
       <nav style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "center" }}>
         {/* User avatar / sign-out */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              aria-label="Account"
-              title={email ?? "Account"}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 999,
-                background: "var(--bg-subtle)",
-                border: "1px solid var(--border-strong)",
-                color: "var(--fg-muted)",
-                fontFamily: "var(--trove-mono, monospace)",
-                fontSize: 11,
-                fontWeight: 600,
-                letterSpacing: "0.02em",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                marginTop: 4,
-              }}
-            >
-              {initials}
-            </button>
+          <DropdownMenuTrigger
+            aria-label="Account"
+            title={email ?? "Account"}
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 999,
+              background: "var(--bg-subtle)",
+              border: "1px solid var(--border-strong)",
+              color: "var(--fg-muted)",
+              fontFamily: "var(--trove-mono, monospace)",
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.02em",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              marginTop: 4,
+            }}
+          >
+            {initials}
           </DropdownMenuTrigger>
           <DropdownMenuContent side="right" align="end">
             <DropdownMenuItem disabled>
