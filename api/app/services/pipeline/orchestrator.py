@@ -141,6 +141,8 @@ class PipelineOrchestrator:
                 logger.info("pipeline.vectorization_already_done", doc_id=str(doc.id))
             else:
                 await self._vectorize(doc, trace_id)
+        elif stage == "finalization":
+            await self._generate_thumbnail(doc)
         else:
             logger.info("pipeline.stage_stub", stage=stage, doc_id=str(doc.id))
 
@@ -709,3 +711,52 @@ class PipelineOrchestrator:
     async def _vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Chunk text and generate embeddings."""
         await vectorize_document(self.db, doc.id, doc.user_id, trace_id=trace_id)
+
+    async def _generate_thumbnail(self, doc) -> None:  # type: ignore[no-untyped-def]
+        """Resize the first page image to a JPEG thumbnail and upload to storage."""
+        import io
+
+        from PIL import Image
+
+        bucket = settings.supabase_storage_bucket
+        img_bytes: bytes | None = None
+
+        # Prefer already-uploaded page image (PDFs, scanned docs)
+        if self._page_image_paths:
+            try:
+                img_bytes = supabase.storage.from_(bucket).download(self._page_image_paths[0])
+            except Exception:
+                pass
+
+        # Fallback: use in-memory page images from extraction (avoids storage round-trip)
+        if img_bytes is None:
+            extraction = getattr(self, "_last_extraction", None)
+            page_images = getattr(extraction, "page_images", None)
+            if page_images:
+                img_bytes = page_images[0]
+
+        # Fallback: original file is an image
+        if img_bytes is None and doc.mime_type.startswith("image/"):
+            try:
+                img_bytes = supabase.storage.from_(bucket).download(doc.storage_path)
+            except Exception:
+                pass
+
+        if img_bytes is None:
+            return  # Not previewable; skip silently
+
+        try:
+            img = Image.open(io.BytesIO(img_bytes))
+            img = img.convert("RGB")  # strip alpha for JPEG
+            img.thumbnail((600, 800), Image.LANCZOS)
+            out = io.BytesIO()
+            img.save(out, format="JPEG", quality=82, optimize=True)
+            supabase.storage.from_(bucket).upload(
+                f"thumbnails/{doc.id}.jpg",
+                out.getvalue(),
+                file_options={"content-type": "image/jpeg", "upsert": "true"},
+            )
+            logger.info("pipeline.thumbnail_generated", doc_id=str(doc.id))
+        except Exception:
+            logger.exception("pipeline.thumbnail_failed", doc_id=str(doc.id))
+            # Non-fatal — cards fall back to the decorative placeholder
