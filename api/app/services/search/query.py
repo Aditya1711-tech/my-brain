@@ -114,7 +114,9 @@ async def _hybrid_search(
     bm25_query = f"""
         SELECT d.id, d.original_filename, d.file_type, d.status, d.doc_type,
                d.domain, d.summary, d.created_at,
-               ts_rank(d.full_text_tsv, plainto_tsquery('english', :q)) AS rank
+               ts_rank(d.full_text_tsv, plainto_tsquery('english', :q)) AS rank,
+               (to_tsvector('english', COALESCE(d.user_note, ''))
+                @@ plainto_tsquery('english', :q)) AS note_match
         FROM documents d
         {join_clause}
         WHERE {where_clause}
@@ -122,7 +124,12 @@ async def _hybrid_search(
         LIMIT 30
     """
     bm25_result = await db.execute(text(bm25_query), params)
-    bm25_docs = {str(row["id"]): dict(row) for row in bm25_result.mappings().fetchall()}
+    bm25_docs: dict[str, dict] = {}
+    for row in bm25_result.mappings().fetchall():
+        doc = dict(row)
+        # Apply +0.3 score boost when the query matches the user_note specifically
+        doc["_score"] = float(doc.pop("rank") or 0) + (0.3 if doc.pop("note_match") else 0)
+        bm25_docs[str(doc["id"])] = doc
 
     # Vector similarity search
     try:
@@ -163,18 +170,16 @@ async def _hybrid_search(
             """
             vec_doc_result = await db.execute(text(vec_doc_query), vid_params)
             for row in vec_doc_result.mappings().fetchall():
-                bm25_docs[str(row["id"])] = dict(row)
+                doc = dict(row)
+                doc["_score"] = 0.0  # vector-only; no BM25 rank to boost
+                bm25_docs[str(doc["id"])] = doc
 
     except Exception:
         logger.exception("search.vector_search_failed")
 
-    # Merge: BM25 results first, then vector results not already included
-    seen = set()
-    merged = []
-    for doc in bm25_docs.values():
-        doc_id = str(doc["id"])
-        if doc_id not in seen:
-            seen.add(doc_id)
-            merged.append(doc)
+    # Merge: sort by score (BM25 rank + note_match boost) descending, strip internal key
+    docs_sorted = sorted(bm25_docs.values(), key=lambda d: d.get("_score", 0), reverse=True)
+    for doc in docs_sorted:
+        doc.pop("_score", None)
 
-    return merged[:50]
+    return docs_sorted[:50]
