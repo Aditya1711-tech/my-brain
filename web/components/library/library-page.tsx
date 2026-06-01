@@ -31,6 +31,48 @@ function SkeletonCard() {
   );
 }
 
+// ── Masonry grid (flex columns — works without a fixed container height) ──────
+function MasonryGrid<T>({
+  items,
+  renderItem,
+  gap = 20,
+}: {
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  gap?: number;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [colCount, setColCount] = useState(4);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => {
+      const w = el.offsetWidth;
+      if (w < 480) setColCount(2);
+      else if (w < 720) setColCount(3);
+      else setColCount(Math.max(4, Math.floor(w / 260)));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const cols: T[][] = Array.from({ length: colCount }, () => []);
+  items.forEach((item, i) => cols[i % colCount].push(item));
+
+  return (
+    <div ref={containerRef} className="board">
+      {cols.map((col, ci) => (
+        <div key={ci} className="board-col">
+          {col.map((item, i) => renderItem(item, ci * Math.ceil(items.length / colCount) + i))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface DocumentItem {
   id: string;
   original_filename: string;
@@ -756,13 +798,10 @@ export function LibraryPage() {
           <div className="k-shimmer" style={{ height: 56, width: "38%", borderRadius: 8 }} />
         </div>
         <div style={{ padding: `8px ${hPad} ${isMobile ? "var(--mobile-content-pb, 96px)" : "120px"}` }}>
-          <div className="board">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="board-card">
-                <SkeletonCard />
-              </div>
-            ))}
-          </div>
+          <MasonryGrid
+            items={Array.from({ length: 6 }, (_, i) => i)}
+            renderItem={(_, i) => <SkeletonCard key={i} />}
+          />
         </div>
       </div>
     );
@@ -820,11 +859,11 @@ export function LibraryPage() {
 
         {/* Document grid */}
         {displayDocs.length > 0 && (
-          <div className="board">
-            {displayDocs.map((doc, i) => (
+          <MasonryGrid
+            items={displayDocs}
+            renderItem={(doc, i) => (
               <div
                 key={doc.id}
-                className="board-card"
                 style={{
                   animation: "k-card-in 280ms var(--trove-ease-out, ease-out) both",
                   animationDelay: `${Math.min(i * 40, 400)}ms`,
@@ -835,8 +874,8 @@ export function LibraryPage() {
                   onClick={() => router.push(`/document/${doc.id}`)}
                 />
               </div>
-            ))}
-          </div>
+            )}
+          />
         )}
       </div>
 
