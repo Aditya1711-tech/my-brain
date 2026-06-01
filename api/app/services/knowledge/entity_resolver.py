@@ -34,9 +34,10 @@ class EntityResolver:
     ) -> IntegrationOutput:
         """Run entity resolution: pre-filter candidates, call KI agent, persist results."""
 
-        # Step 1: Collect names and identifiers from detected entities
+        # Step 1: Collect names, identifiers, and DOB from detected entities
         names = [e["name"] for e in detected_entities if e.get("name")]
         identifiers: dict[str, str] = {}
+        dob: str | None = None
         for entity in detected_entities:
             for key, value in entity.get("fields", {}).items():
                 if key in (
@@ -44,9 +45,11 @@ class EntityResolver:
                     "isin", "employee_id", "license_number", "registration_number",
                 ):
                     identifiers[key] = value
+                elif key in ("date_of_birth", "dob", "birth_date") and not dob:
+                    dob = value
 
-        # Step 2: Pre-filter candidates from DB via trigram + identifier match
-        candidates = await self.entities_repo.find_candidates(user_id, names, identifiers)
+        # Step 2: Pre-filter candidates from DB via trigram + phonetic + identifier + DOB
+        candidates = await self.entities_repo.find_candidates(user_id, names, identifiers, dob=dob)
 
         # Serialize candidates for the LLM
         existing_entities = []
@@ -57,6 +60,7 @@ class EntityResolver:
                 "canonical_name": c["canonical_name"],
                 "aliases": c["aliases"] if isinstance(c["aliases"], list) else [],
                 "identifiers": c["identifiers"] if isinstance(c["identifiers"], dict) else {},
+                "linked_doc_types": list(c["linked_doc_types"]) if c.get("linked_doc_types") else [],
             })
 
         logger.info(

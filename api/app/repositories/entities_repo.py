@@ -8,39 +8,75 @@ class EntitiesRepo:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
-    async def find_candidates(self, user_id: UUID, names: list[str], identifiers: dict) -> list[dict]:
-        """Find candidate entities for resolution via trigram name match + identifier match."""
-        if not names and not identifiers:
+    async def find_candidates(
+        self,
+        user_id: UUID,
+        names: list[str],
+        identifiers: dict,
+        dob: str | None = None,
+    ) -> list[dict]:
+        """Find candidate entities via trigram (≥0.5) + phonetic + identifier + DOB cross-ref."""
+        if not names and not identifiers and not dob:
             return []
+
+        from metaphone import doublemetaphone
 
         conditions = []
         params: dict = {"user_id": str(user_id)}
 
-        # Trigram name similarity for each detected name
         for i, name in enumerate(names):
-            param_key = f"name_{i}"
-            conditions.append(f"similarity(canonical_name, :{param_key}) > 0.3")
-            params[param_key] = name
+            # Trigram similarity (raised from 0.3 → 0.5 to reduce false positives)
+            params[f"name_{i}"] = name
+            conditions.append(f"similarity(e.canonical_name, :name_{i}) > 0.5")
 
-        # Also check aliases
-        for i, name in enumerate(names):
-            param_key = f"alias_{i}"
-            conditions.append(f"aliases::text ILIKE :{param_key}")
-            params[param_key] = f"%{name}%"
+            # Alias substring match
+            params[f"alias_{i}"] = f"%{name}%"
+            conditions.append(f"e.aliases::text ILIKE :alias_{i}")
 
-        # Identifier matches (exact)
+            # Phonetic (double-metaphone primary code)
+            primary, _ = doublemetaphone(name or "")
+            if primary:
+                params[f"metaphone_{i}"] = primary
+                conditions.append(f"e.name_metaphone = :metaphone_{i}")
+
+        # Identifier exact matches
         for key, value in identifiers.items():
-            param_key = f"ident_{key}"
-            conditions.append(f"identifiers->>'{key}' = :{param_key}")
-            params[param_key] = value
+            params[f"ident_{key}"] = value
+            conditions.append(f"e.identifiers->>'{key}' = :ident_{key}")
+
+        # DOB cross-reference via facts subquery
+        if dob:
+            params["dob"] = dob
+            conditions.append(
+                "EXISTS ("
+                "  SELECT 1 FROM facts f"
+                "  WHERE f.entity_id = e.id"
+                "    AND f.field_name = 'date_of_birth'"
+                "    AND f.field_value = :dob"
+                ")"
+            )
 
         where_clause = " OR ".join(conditions) if conditions else "false"
 
         result = await self.db.execute(
             text(f"""
-                SELECT id, entity_type, canonical_name, aliases, attributes, identifiers
-                FROM entities
-                WHERE user_id = :user_id AND ({where_clause})
+                SELECT
+                    e.id,
+                    e.entity_type,
+                    e.canonical_name,
+                    e.aliases,
+                    e.attributes,
+                    e.identifiers,
+                    (
+                        SELECT COALESCE(array_agg(DISTINCT d.doc_type), ARRAY[]::text[])
+                        FROM document_entities de
+                        JOIN documents d ON d.id = de.document_id
+                        WHERE de.entity_id = e.id AND de.user_id = :user_id
+                    ) AS linked_doc_types
+                FROM entities e
+                WHERE e.user_id = :user_id
+                  AND e.deleted_at IS NULL
+                  AND ({where_clause})
                 LIMIT 50
             """),
             params,
