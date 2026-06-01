@@ -19,8 +19,11 @@ interface DropzoneProps {
   onUploadComplete?: () => void;
 }
 
+const NOTE_MAX = 2000;
+
 export function Dropzone({ onUploadComplete }: DropzoneProps) {
   const [files, setFiles] = useState<UploadFile[]>([]);
+  const [userNote, setUserNote] = useState("");
 
   const updateFile = useCallback(
     (index: number, update: Partial<UploadFile>) => {
@@ -32,7 +35,7 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
   );
 
   const uploadFile = useCallback(
-    async (uploadFile: UploadFile, index: number) => {
+    async (uploadFile: UploadFile, index: number, note?: string) => {
       const { file } = uploadFile;
       updateFile(index, { status: "uploading", progress: 10 });
 
@@ -60,21 +63,24 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
         updateFile(index, { progress: 70 });
 
         // 4. Call BFF to create document record + enqueue
+        const body: Record<string, unknown> = {
+          file_hash: fileHash,
+          original_filename: file.name,
+          mime_type: file.type,
+          size_bytes: file.size,
+          storage_path: storagePath,
+        };
+        if (note) body.user_note = note;
+
         const res = await fetch("/api/documents", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            file_hash: fileHash,
-            original_filename: file.name,
-            mime_type: file.type,
-            size_bytes: file.size,
-            storage_path: storagePath,
-          }),
+          body: JSON.stringify(body),
         });
 
         if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          throw new Error(body.error ?? `Upload failed (${res.status})`);
+          const resBody = await res.json().catch(() => ({}));
+          throw new Error(resBody.error ?? `Upload failed (${res.status})`);
         }
 
         updateFile(index, { status: "done", progress: 100 });
@@ -106,19 +112,22 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
       const startIndex = files.length;
       setFiles((prev) => [...prev, ...newFiles]);
 
+      // Capture note at drop time so all files in this batch share the same note
+      const noteForBatch = userNote.trim() || undefined;
+
       // Start uploading each file
       newFiles.forEach((f, i) => {
-        uploadFile(f, startIndex + i);
+        uploadFile(f, startIndex + i, noteForBatch);
       });
 
       // Notify parent when all done
       if (newFiles.length > 0) {
-        Promise.allSettled(newFiles.map((f, i) => uploadFile(f, startIndex + i))).then(
+        Promise.allSettled(newFiles.map((f, i) => uploadFile(f, startIndex + i, noteForBatch))).then(
           () => onUploadComplete?.(),
         );
       }
     },
-    [files.length, uploadFile, onUploadComplete],
+    [files.length, uploadFile, onUploadComplete, userNote],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -149,6 +158,49 @@ export function Dropzone({ onUploadComplete }: DropzoneProps) {
         </p>
         <p className="mt-1 text-xs" style={{ color: "var(--fg-subtle)" }}>
           PDF · images · DOCX · XLSX · PPTX · CSV · TXT · max 50 MB
+        </p>
+      </div>
+
+      {/* Notes textarea */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+          <label
+            htmlFor="upload-note"
+            style={{ fontSize: 12, fontWeight: 500, color: "var(--fg-subtle)" }}
+          >
+            Add a note <span style={{ fontWeight: 400 }}>(optional)</span>
+          </label>
+          <span
+            style={{
+              fontSize: 11,
+              color: userNote.length > NOTE_MAX * 0.9 ? "var(--status-error-fg)" : "var(--fg-muted)",
+            }}
+          >
+            {userNote.length}/{NOTE_MAX}
+          </span>
+        </div>
+        <textarea
+          id="upload-note"
+          value={userNote}
+          onChange={(e) => setUserNote(e.target.value.slice(0, NOTE_MAX))}
+          rows={3}
+          placeholder={`e.g. "This is my mother's passport"\nUse @Name to link to people, #tag to tag`}
+          style={{
+            width: "100%",
+            resize: "vertical",
+            borderRadius: 8,
+            border: "1px solid var(--border-faint)",
+            background: "var(--bg-elevated)",
+            color: "var(--fg)",
+            fontSize: 13,
+            padding: "8px 10px",
+            fontFamily: "inherit",
+            outline: "none",
+            boxSizing: "border-box",
+          }}
+        />
+        <p style={{ fontSize: 11, color: "var(--fg-muted)", margin: 0 }}>
+          The note helps the system understand context. Saving a note updates the knowledge graph.
         </p>
       </div>
 
