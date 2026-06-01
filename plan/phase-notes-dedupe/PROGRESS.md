@@ -9,8 +9,8 @@
 
 ## Current
 
-- **Track A:** ND-B-03 (KI input model + prompt — blocked until Track B lands ND-D-03)
-- **Track B:** ND-D-03 (KI richer candidate context — relationships + doc_types + known_dob)
+- **Track A:** ND-B-03 (KI input model + prompt — Track B ND-D-03 now landed, unblocked)
+- **Track B:** ND-D-04 (fix uncertain path — write entity_duplicate_candidates rows)
 
 ---
 
@@ -42,7 +42,7 @@
 | ND-A-01 | DB migration (shared with Track A) | [x] | 2026-06-02 |
 | ND-D-01 | `name_metaphone` column + backfill existing entities | [x] | 2026-06-02 |
 | ND-D-02 | Expand `find_candidates` — phonetic + DOB + doc-type; threshold 0.3→0.5 | [x] | 2026-06-02 |
-| ND-D-03 | KI — richer candidate context (relationships + doc_types + known_dob) | [ ] | |
+| ND-D-03 | KI — richer candidate context (relationships + doc_types + known_dob) | [x] | 2026-06-02 |
 | ND-D-04 | Fix `uncertain` path — preserve KI signal via `entity_duplicate_candidates` rows | [ ] | |
 | ND-D-05 | Audit: filter `deleted_at IS NULL` on all entity reads (multi-file commit) | [ ] | |
 | ND-E-01 | `entity_duplicate_candidates` table (in ND-A-01) | [x] | 2026-06-02 |
@@ -79,6 +79,7 @@
 - 2026-06-02 | ND-B-02 | Orchestrator: _integrate SELECT now includes user_note; resolver.resolve_and_persist() gets user_note param
 - 2026-06-02 | ND-D-01 | metaphone added to requirements.txt; entities_repo.create() computes doublemetaphone primary on insert; backfill_metaphone.py script (batched, --dry-run)
 - 2026-06-02 | ND-D-02 | find_candidates: trigram 0.3→0.5, deleted_at IS NULL, phonetic OR condition, DOB facts subquery, linked_doc_types correlated subquery; entity_resolver extracts DOB + forwards linked_doc_types to KI
+- 2026-06-02 | ND-D-03 | entity_resolver: batch relationships + DOB queries (one each); attach relationships+known_dob to candidate dicts; KI prompt: existing_entities format section added
 
 ---
 
@@ -109,3 +110,4 @@
 | 2026-06-02 | Track A | ND-B-02: orchestrator _integrate loads user_note; resolver signature extended; log line added | ND-B-02 | ND-D-01→D-03 then ND-B-03 |
 | 2026-06-02 | Track B | ND-D-01: metaphone in requirements.txt; entities_repo.create() computes+stores metaphone; backfill_metaphone.py script | ND-D-01 | ND-D-02 |
 | 2026-06-02 | Track B | ND-D-02: find_candidates — trigram 0.5, phonetic OR, DOB facts subquery, linked_doc_types, deleted_at IS NULL; entity_resolver forwards dob + linked_doc_types | ND-D-02 | ND-D-03 |
+| 2026-06-02 | Track B | ND-D-03: batch relationships + DOBs onto candidate dicts; KI prompt existing_entities format section; ND-B-03 now unblocked | ND-D-03 | ND-D-04 (Track B), ND-B-03 (Track A) |

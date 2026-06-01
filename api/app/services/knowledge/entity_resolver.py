@@ -3,6 +3,7 @@
 from uuid import UUID
 
 import structlog
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.knowledge_integrator import (
@@ -51,7 +52,7 @@ class EntityResolver:
         # Step 2: Pre-filter candidates from DB via trigram + phonetic + identifier + DOB
         candidates = await self.entities_repo.find_candidates(user_id, names, identifiers, dob=dob)
 
-        # Serialize candidates for the LLM
+        # Serialize candidates for the LLM (relationships + known_dob filled below)
         existing_entities = []
         for c in candidates:
             existing_entities.append({
@@ -61,7 +62,50 @@ class EntityResolver:
                 "aliases": c["aliases"] if isinstance(c["aliases"], list) else [],
                 "identifiers": c["identifiers"] if isinstance(c["identifiers"], dict) else {},
                 "linked_doc_types": list(c["linked_doc_types"]) if c.get("linked_doc_types") else [],
+                "relationships": [],
+                "known_dob": None,
             })
+
+        # Batch-fetch relationships and known DOBs (one query each, not N)
+        if existing_entities:
+            candidate_ids = [ent["id"] for ent in existing_entities]
+            id_ph = ", ".join(f":cid_{i}" for i in range(len(candidate_ids)))
+            id_params: dict = {f"cid_{i}": cid for i, cid in enumerate(candidate_ids)}
+
+            rel_result = await self.db.execute(
+                text(f"""
+                    SELECT from_entity_id::text, to_entity_id::text, relation_type
+                    FROM entity_relationships
+                    WHERE user_id = :user_id
+                      AND (from_entity_id::text IN ({id_ph}) OR to_entity_id::text IN ({id_ph}))
+                """),
+                {"user_id": str(user_id), **id_params},
+            )
+            rel_map: dict[str, list[dict]] = {cid: [] for cid in candidate_ids}
+            for row in rel_result.fetchall():
+                from_id, to_id, rel_type = row[0], row[1], row[2]
+                if from_id in rel_map:
+                    rel_map[from_id].append({"relation_type": rel_type, "with_entity_id": to_id})
+                if to_id in rel_map:
+                    rel_map[to_id].append({"relation_type": rel_type, "with_entity_id": from_id})
+
+            dob_result = await self.db.execute(
+                text(f"""
+                    SELECT entity_id::text, field_value
+                    FROM facts
+                    WHERE user_id = :user_id
+                      AND entity_id::text IN ({id_ph})
+                      AND field_name = 'date_of_birth'
+                      AND valid_until IS NULL
+                """),
+                {"user_id": str(user_id), **id_params},
+            )
+            dob_map = {row[0]: row[1] for row in dob_result.fetchall()}
+
+            for ent in existing_entities:
+                eid = ent["id"]
+                ent["relationships"] = rel_map.get(eid, [])
+                ent["known_dob"] = dob_map.get(eid)
 
         logger.info(
             "entity_resolver.candidates",

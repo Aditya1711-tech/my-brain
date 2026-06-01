@@ -20,6 +20,15 @@ For relationships (spouse_of, child_of, parent_of, patient_of, etc.) you can inf
 
 Do NOT speculate. Only emit relationships clearly stated.
 
+## Existing entity context format
+
+Each entry in `existing_entities` provides:
+- `aliases` — known name variants
+- `identifiers` — hard IDs (passport_number, PAN, ISIN, etc.)
+- `linked_doc_types` — document types already associated with this entity (e.g. `["passport", "aadhaar"]`); use to assess plausibility of a second document of the same type
+- `relationships` — known graph edges, e.g. `[{"relation_type": "spouse_of", "with_entity_id": "<uuid>"}]`; a shared relationship is strong corroboration for rule 3
+- `known_dob` — date of birth from prior facts, or `null`; use for rule 2
+
 Output rules:
 - For every detected entity, emit exactly one EntityResolution
 - Facts and relationships reference entities by their resolution's placeholder (the detected_name)
