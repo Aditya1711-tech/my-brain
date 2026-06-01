@@ -9,8 +9,8 @@
 
 ## Current
 
-- **Track A:** ND-A-02 (ready — awaiting ND-A-01 merge to `main`)
-- **Track B:** ND-D-01 (ready — awaiting ND-A-01 merge to `main`)
+- **Track A:** ND-A-05 (PATCH /note BFF endpoint — prereq for ND-A-03)
+- **Track B:** ND-D-01 (name_metaphone column + backfill)
 
 ---
 
@@ -19,7 +19,7 @@
 | ID | Subject | Status | Closed |
 |---|---|---|---|
 | ND-A-01 | DB migration — notes+dedupe schema | [x] | 2026-06-02 |
-| ND-A-02 | Upload UI — notes textarea in dropzone | [ ] | |
+| ND-A-02 | Upload UI — notes textarea in dropzone | [x] | 2026-06-02 |
 | ND-A-03 | Document detail — editable notes panel | [ ] | |
 | ND-A-04 | `@mention` autocomplete in note panel (with `deleted_at IS NULL` filter) | [ ] | |
 | ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [ ] | |
@@ -71,6 +71,7 @@
 
 - 2026-06-02 | ND-A-01 | DB migration — notes+dedupe schema (migration `20260602_0005`; both tables, all columns, RLS, TSV trigger)
 - 2026-06-02 | ND-E-01 | entity_duplicate_candidates table marker (created in ND-A-01; RLS + indices confirmed)
+- 2026-06-02 | ND-A-02 | Upload UI — notes textarea (shared per-batch, 2000 char limit + counter, user_note in POST body)
 
 ---
 
@@ -93,3 +94,4 @@
 | 2026-06-02 | planning | Discovery + initial plan files written | — | Human review |
 | 2026-06-02 | planning | Plan revised — 11 design improvements folded in (uncertain signal preservation, chunk index convention, @mention safety, embedded entity names in note chunk, fact-conflict semantics, monotonic confidence, backfill safety cap, deleted_at audit, tracing audit, notes backfill task) | — | Awaiting human approval |
 | 2026-06-02 | both | ND-A-01: DB migration 0005 — notes+dedupe schema written; ND-E-01 marker closed | ND-A-01, ND-E-01 | ND-A-02 (Track A), ND-D-01 (Track B) |
+| 2026-06-02 | Track A | ND-A-02: dropzone notes textarea + user_note in POST body | ND-A-02 | ND-A-05, ND-D-01 |
