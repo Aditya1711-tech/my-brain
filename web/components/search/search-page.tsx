@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "re
 import { useRouter } from "next/navigation";
 import { Search, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/lib/hooks/use-is-mobile";
 
 interface SearchChip {
   facet: string;
@@ -42,6 +43,7 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
   const [documents, setDocuments] = useState<DocumentResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const isMobile = useIsMobile();
 
   const runSearch = useCallback(
     async (searchChips: SearchChip[], newTerm?: string) => {
@@ -114,14 +116,18 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
     }
   };
 
+  const hPad = isMobile ? "16px" : "40px";
+  const vPadTop = isMobile ? "20px" : "40px";
+  const vPadBottom = isMobile ? "var(--mobile-content-pb, 96px)" : "80px";
+
   return (
-    <div style={{ padding: "40px 40px 80px", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ padding: `${vPadTop} ${hPad} ${vPadBottom}`, display: "flex", flexDirection: "column", gap: 24 }}>
       <h2
         style={{
           fontFamily: "var(--trove-serif, Georgia, serif)",
           fontStyle: "italic",
           fontWeight: 400,
-          fontSize: 44,
+          fontSize: isMobile ? 28 : 44,
           letterSpacing: "-0.02em",
           color: "var(--fg-strong)",
         }}
@@ -180,14 +186,37 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
       </div>
 
       {/* Empty results */}
-      {searched && documents.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground text-sm">Nothing matches that combination.</p>
+      {searched && !loading && documents.length === 0 && (
+        <div style={{ textAlign: "center", padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              background: "var(--bg-subtle)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--fg-subtle)",
+            }}
+          >
+            <Search style={{ width: 24, height: 24 }} />
+          </div>
+          <p style={{ fontFamily: "var(--trove-sans, sans-serif)", fontSize: 15, color: "var(--fg-muted)" }}>
+            Nothing matches that combination.
+          </p>
           {chips.length > 0 && (
             <button
               onClick={() => removeChip(chips.length - 1)}
-              className="mt-2 text-sm hover:underline"
-              style={{ color: "var(--trove-teal-600)" }}
+              style={{
+                fontFamily: "var(--trove-sans, sans-serif)",
+                fontSize: 13,
+                color: "var(--accent-ink)",
+                background: "none",
+                border: 0,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
             >
               Try removing the last filter
             </button>
@@ -197,32 +226,56 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
 
       {/* Results grid */}
       {documents.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {documents.map((doc) => (
+        <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}>
+          {documents.map((doc, i) => (
             <div
               key={doc.id}
-              className="rounded-[10px] border bg-card cursor-pointer transition-shadow"
-              style={{ padding: "14px 16px 12px" }}
+              style={{
+                borderRadius: 10,
+                border: "1px solid var(--border-faint)",
+                background: "var(--bg-elevated)",
+                padding: "14px 16px 12px",
+                cursor: "pointer",
+                transition: "box-shadow var(--trove-dur-base, 220ms), border-color 140ms",
+                animation: "k-card-in 280ms var(--trove-ease-out, ease-out) both",
+                animationDelay: `${Math.min(i * 35, 350)}ms`,
+              }}
               onClick={() => router.push(`/document/${doc.id}`)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--trove-shadow-md)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "var(--trove-shadow-md)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.boxShadow = "none";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-faint)";
+              }}
             >
-              <p className="font-medium text-sm truncate" style={{ color: "var(--trove-stone-900)" }}>
-                {doc.original_filename}
+              <p
+                style={{
+                  fontFamily: "var(--trove-sans, sans-serif)",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "var(--fg)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {doc.original_filename.replace(/\.[^/.]+$/, "")}
               </p>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-[11px] font-mono uppercase tracking-wide" style={{ color: "var(--trove-stone-400)" }}>
+              <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontFamily: "var(--trove-mono, monospace)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-subtle)" }}>
                   {doc.file_type}
                 </span>
                 <StatusBadge status={doc.status} />
               </div>
               {doc.doc_type && (
-                <p className="mt-1.5 text-[12px]" style={{ color: "var(--trove-stone-500)" }}>
+                <p style={{ marginTop: 6, fontSize: 11, fontFamily: "var(--trove-mono, monospace)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-subtle)" }}>
                   {doc.doc_type.replace(/_/g, " ")}
                 </p>
               )}
               {doc.summary && (
-                <p className="mt-1 text-xs line-clamp-2" style={{ color: "var(--trove-stone-500)" }}>
+                <p style={{ marginTop: 6, fontSize: 12, color: "var(--fg-muted)", fontFamily: "var(--trove-sans, sans-serif)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                   {doc.summary}
                 </p>
               )}
@@ -234,20 +287,42 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
   );
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  uploaded: "Queued",
+  ready: "Ready",
+  failed: "Failed",
+  extracting_text: "Extracting",
+  classified: "Classifying",
+  schema_built: "Building schema",
+  extracted: "Extracting fields",
+  verified: "Verifying",
+  integrated: "Integrating",
+  vectorized: "Vectorizing",
+};
+
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, { bg: string; color: string }> = {
-    uploaded:   { bg: "var(--trove-stone-100)",  color: "var(--trove-stone-500)" },
-    ready:      { bg: "var(--trove-sage-50)",    color: "var(--trove-sage-700)" },
-    failed:     { bg: "var(--trove-clay-50)",    color: "var(--trove-clay-700)" },
+    uploaded: { bg: "var(--trove-stone-100)",    color: "var(--trove-stone-600)" },
+    ready:    { bg: "var(--status-ready-bg)",    color: "var(--status-ready-fg)" },
+    failed:   { bg: "var(--status-error-bg)",    color: "var(--status-error-fg)" },
   };
-  const s = styles[status] ?? { bg: "var(--trove-amber-50)", color: "var(--trove-amber-700)" };
+  const s = styles[status] ?? { bg: "var(--status-processing-bg)", color: "var(--status-processing-fg)" };
+  const label = STATUS_LABELS[status] ?? status;
 
   return (
     <span
-      className="rounded-full px-2 py-0.5 text-[11px] font-medium"
-      style={{ background: s.bg, color: s.color }}
+      style={{
+        borderRadius: 999,
+        padding: "2px 8px",
+        fontSize: 10.5,
+        fontWeight: 500,
+        fontFamily: "var(--trove-sans, sans-serif)",
+        background: s.bg,
+        color: s.color,
+        whiteSpace: "nowrap",
+      }}
     >
-      {status}
+      {label}
     </span>
   );
 }

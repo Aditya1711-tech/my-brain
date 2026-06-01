@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X, Loader2, Download } from "lucide-react";
 
 interface DocumentViewerModalProps {
@@ -19,13 +19,12 @@ export function DocumentViewerModal({ documentId, open, onClose }: DocumentViewe
   const [data, setData] = useState<SignedUrlData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    if (!open) return;
+  const loadFile = () => {
     setData(null);
     setError(null);
     setLoading(true);
-
     fetch(`/api/documents/${documentId}/signed-url`)
       .then((r) => {
         if (!r.ok) throw new Error("Failed to load file");
@@ -34,6 +33,18 @@ export function DocumentViewerModal({ documentId, open, onClose }: DocumentViewe
       .then(setData)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    loadFile();
+    // Escape key
+    const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    // Auto-focus close button for keyboard accessibility
+    setTimeout(() => closeBtnRef.current?.focus(), 50);
+    return () => document.removeEventListener("keydown", handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, documentId]);
 
   if (!open) return null;
@@ -44,54 +55,131 @@ export function DocumentViewerModal({ documentId, open, onClose }: DocumentViewe
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.6)" }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={data?.filename ?? "Document Viewer"}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 50,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(0,0,0,0.65)",
+        backdropFilter: "blur(8px)",
+        animation: "k-overlay-in 160ms var(--trove-ease-out, ease-out) both",
+      }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="flex flex-col rounded-lg border bg-card"
-        style={{ width: "min(90vw, 1000px)", height: "85vh" }}
+        style={{
+          width: "min(90vw, 1000px)",
+          height: "85vh",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: 14,
+          border: "1px solid var(--border)",
+          background: "var(--bg-elevated)",
+          boxShadow: "var(--trove-shadow-lg)",
+          animation: "k-sheet-in 220ms var(--trove-ease-out, ease-out) both",
+          overflow: "hidden",
+        }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3 shrink-0">
-          <span className="text-sm font-medium truncate max-w-[80%]">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderBottom: "1px solid var(--border-faint)",
+            padding: "12px 16px",
+            flexShrink: 0,
+          }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--fg)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "80%" }}>
             {data?.filename ?? "Document Viewer"}
           </span>
           <button
+            ref={closeBtnRef}
+            aria-label="Close document viewer"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground ml-2"
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-subtle)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+            style={{
+              width: 30, height: 30, borderRadius: 8, border: 0,
+              background: "none", cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              color: "var(--fg-muted)", marginLeft: 8,
+              transition: "background var(--trove-dur-fast, 140ms)",
+            }}
           >
-            <X className="h-4 w-4" />
+            <X aria-hidden="true" className="h-4 w-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-hidden flex items-center justify-center">
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
           {loading && (
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+              <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin" style={{ color: "var(--fg-muted)" }} />
+              <p style={{ fontSize: 13, color: "var(--fg-muted)", fontFamily: "var(--trove-sans, sans-serif)" }}>
+                Loading document…
+              </p>
+            </div>
           )}
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <p style={{ fontSize: 13, color: "var(--status-error-fg)", fontFamily: "var(--trove-sans, sans-serif)" }}>
+                {error}
+              </p>
+              <button
+                onClick={loadFile}
+                style={{
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  border: "1px solid var(--border)",
+                  background: "var(--bg-elevated)",
+                  color: "var(--fg)",
+                  cursor: "pointer",
+                  fontSize: 13,
+                  fontFamily: "var(--trove-sans, sans-serif)",
+                }}
+              >
+                Try again
+              </button>
+            </div>
           )}
           {data && canEmbed && (
             <iframe
               src={data.url}
               title={data.filename}
-              className="w-full h-full"
-              style={{ border: "none" }}
+              style={{ width: "100%", height: "100%", border: "none" }}
             />
           )}
           {data && !canEmbed && (
-            <div className="text-center space-y-3">
-              <p className="text-sm text-muted-foreground">
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+              <p style={{ fontSize: 13, color: "var(--fg-muted)", fontFamily: "var(--trove-sans, sans-serif)" }}>
                 Preview not available for this file type.
               </p>
               <a
                 href={data.url}
                 download={data.filename}
-                className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 16px",
+                  borderRadius: 8,
+                  border: "1px solid var(--border)",
+                  background: "var(--bg-elevated)",
+                  color: "var(--fg)",
+                  textDecoration: "none",
+                  fontSize: 13,
+                  fontFamily: "var(--trove-sans, sans-serif)",
+                  fontWeight: 500,
+                }}
               >
-                <Download className="h-4 w-4" />
+                <Download aria-hidden="true" className="h-4 w-4" />
                 Download {data.filename}
               </a>
             </div>

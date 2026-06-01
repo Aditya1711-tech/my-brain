@@ -272,6 +272,41 @@
   width: 100%;
 }
 
+/* Mobile: 2 columns on narrow phones */
+@media (max-width: 767px) {
+  .board {
+    columns: 2;
+    column-gap: 12px;
+  }
+  .board-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* =========================================================================
+   Trove · Mobile layout helpers
+   ========================================================================= */
+
+/* Hide sidebar on mobile, show bottom nav */
+@media (max-width: 767px) {
+  .trove-sidebar { display: none !important; }
+  .trove-bottom-nav { display: flex !important; }
+}
+@media (min-width: 768px) {
+  .trove-sidebar { display: flex !important; }
+  .trove-bottom-nav { display: none !important; }
+}
+
+/* Safe area tokens — used by components */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --bottom-nav-height: 60px;
+  --mobile-content-pb: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 16px);
+}
+
 /* =========================================================================
    Trove · Utility classes (from kit)
    ========================================================================= */
@@ -283,15 +318,39 @@
 /* =========================================================================
    Trove · Keyframe animations
    ========================================================================= */
-@keyframes k-spin     { to { transform: rotate(360deg); } }
-@keyframes k-pulse    { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-@keyframes k-fade-in  { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-@keyframes k-overlay-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes k-sheet-in { from { opacity: 0; transform: scale(0.985) translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes k-spin         { to { transform: rotate(360deg); } }
+@keyframes k-pulse        { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes k-fade-in      { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes k-overlay-in   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes k-sheet-in     { from { opacity: 0; transform: scale(0.985) translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes k-card-in      { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes k-slide-in-right { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+@keyframes k-shimmer      { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes k-typing-dot   { 0%, 80%, 100% { opacity: 0.2; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-4px); } }
 
-.k-spin    { animation: k-spin 1.2s linear infinite; transform-origin: center; }
-.k-pulse   { animation: k-pulse 1.6s var(--trove-ease-out, ease-out) infinite; }
-.k-fade-in { animation: k-fade-in 220ms var(--trove-ease-out, ease-out) both; }
+.k-spin         { animation: k-spin 1.2s linear infinite; transform-origin: center; }
+.k-pulse        { animation: k-pulse 1.6s var(--trove-ease-out, ease-out) infinite; }
+.k-fade-in      { animation: k-fade-in 220ms var(--trove-ease-out, ease-out) both; }
+.k-slide-in-right { animation: k-slide-in-right 240ms var(--trove-ease-out, ease-out) both; }
+
+/* Document card hover */
+.doc-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 8px 28px -8px rgba(0,0,0,0.5);
+}
+
+/* Skeleton shimmer */
+.k-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-subtle) 25%,
+    color-mix(in srgb, var(--bg-subtle) 60%, var(--bg-elevated)) 50%,
+    var(--bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: k-shimmer 1.6s linear infinite;
+}
 
 @layer base {
   * {
@@ -299,6 +358,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Capacitor: push content below native status bar on iOS/Android */
+    padding-top: env(safe-area-inset-top, 0px);
   }
   html {
     @apply font-sans;

@@ -18,6 +18,7 @@ import { DocumentViewerModal } from "@/components/shared/document-viewer-modal";
 import { Button } from "@/components/ui/button";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { useIsMobile } from "@/lib/hooks/use-is-mobile";
 
 interface DocumentDetail {
   id: string;
@@ -89,6 +90,7 @@ const STATUS_ORDER = [
 
 export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [doc, setDoc] = useState<DocumentDetail | null>(null);
   const [fields, setFields] = useState<ExtractedField[]>([]);
   const [events, setEvents] = useState<PipelineEvent[]>([]);
@@ -96,6 +98,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const [loading, setLoading] = useState(true);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [savedField, setSavedField] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
 
@@ -183,12 +186,19 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
       prev.map((f) => (f.id === fieldId ? { ...f, field_value: editValue } : f)),
     );
     setEditingField(null);
+    setSavedField(fieldId);
+    setTimeout(() => setSavedField(null), 1200);
   };
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div
+        className="flex h-full items-center justify-center"
+        aria-busy="true"
+        aria-label="Loading document"
+      >
+        <Loader2 aria-hidden="true" className="h-6 w-6 animate-spin" style={{ color: "var(--fg-muted)" }} />
+        <span className="sr-only">Loading document…</span>
       </div>
     );
   }
@@ -205,9 +215,10 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   }
 
   const currentStatusIndex = STATUS_ORDER.indexOf(doc.status);
+  const hPad = isMobile ? "16px" : "40px";
 
   return (
-    <div className="space-y-6" style={{ padding: "40px 40px 80px" }}>
+    <div className="space-y-6" style={{ padding: `${isMobile ? "16px" : "40px"} ${hPad} ${isMobile ? "var(--mobile-content-pb, 96px)" : "80px"}` }}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
@@ -216,13 +227,13 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
         </Button>
       </div>
 
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            {doc.original_filename}
+      <div className={`flex ${isMobile ? "flex-col gap-3" : "items-start justify-between"}`}>
+        <div className="space-y-1 min-w-0">
+          <h1 className={`${isMobile ? "text-lg" : "text-2xl"} font-semibold flex items-center gap-2`}>
+            <FileText className="h-5 w-5 shrink-0" />
+            <span className="truncate">{doc.original_filename}</span>
           </h1>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="uppercase">{doc.file_type}</span>
             <span>{formatBytes(doc.size_bytes)}</span>
             {doc.doc_type && (
@@ -235,7 +246,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
             {doc.language && <span>{doc.language}</span>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isMobile ? "self-start" : ""}`}>
           <Button
             variant="outline"
             size="sm"
@@ -249,10 +260,17 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
       </div>
 
       {doc.status === "failed" && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-red-800">
-              <strong>Error:</strong> {doc.failure_reason ?? "Unknown error"}
+        <div
+          style={{
+            borderRadius: 10,
+            border: "1px solid var(--status-error-dot)",
+            background: "var(--status-error-bg)",
+            padding: 16,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ fontSize: 14, color: "var(--status-error-fg)" }}>
+              <strong>Processing failed:</strong> {doc.failure_reason ?? "Unknown error"}
             </div>
             <Button
               variant="outline"
@@ -269,7 +287,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
                   // Toast error handled by the API
                 }
               }}
-              className="shrink-0 ml-3"
+              style={{ flexShrink: 0 }}
             >
               Retry
             </Button>
@@ -278,9 +296,9 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
       )}
 
       {doc.summary && (
-        <div className="rounded-lg border p-4">
-          <h3 className="text-sm font-medium mb-1">Summary</h3>
-          <p className="text-sm text-muted-foreground">{doc.summary}</p>
+        <div style={{ borderRadius: 10, border: "1px solid var(--border-faint)", background: "var(--bg-elevated)", padding: 16, boxShadow: "var(--trove-shadow-sm)" }}>
+          <h3 style={{ fontFamily: "var(--trove-sans, sans-serif)", fontWeight: 600, fontSize: 13, color: "var(--fg-strong)", marginBottom: 6 }}>Summary</h3>
+          <p style={{ fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.6, fontFamily: "var(--trove-sans, sans-serif)" }}>{doc.summary}</p>
         </div>
       )}
 
@@ -289,13 +307,20 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
         <div className="lg:col-span-2 space-y-6">
           {/* Extracted Fields */}
           {fields.length > 0 && (
-            <div className="rounded-lg border">
-              <div className="border-b p-4">
-                <h3 className="font-medium">Extracted Fields</h3>
+            <div style={{ borderRadius: 10, border: "1px solid var(--border-faint)", background: "var(--bg-elevated)", boxShadow: "var(--trove-shadow-sm)" }}>
+              <div style={{ borderBottom: "1px solid var(--border-faint)", padding: "12px 16px" }}>
+                <h3 style={{ fontFamily: "var(--trove-sans, sans-serif)", fontWeight: 600, fontSize: 13, color: "var(--fg-strong)" }}>Extracted Fields</h3>
               </div>
               <div className="divide-y">
                 {fields.map((field) => (
-                  <div key={field.id} className="flex items-center gap-3 p-3">
+                  <div
+                    key={field.id}
+                    className="flex items-center gap-3 p-3"
+                    style={{
+                      transition: "background 600ms ease",
+                      background: savedField === field.id ? "var(--status-ready-bg)" : "transparent",
+                    }}
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium">
@@ -363,9 +388,9 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
 
           {/* Related Entities */}
           {entities.length > 0 && (
-            <div className="rounded-lg border">
-              <div className="border-b p-4">
-                <h3 className="font-medium">Related Entities</h3>
+            <div style={{ borderRadius: 10, border: "1px solid var(--border-faint)", background: "var(--bg-elevated)", boxShadow: "var(--trove-shadow-sm)" }}>
+              <div style={{ borderBottom: "1px solid var(--border-faint)", padding: "12px 16px" }}>
+                <h3 style={{ fontFamily: "var(--trove-sans, sans-serif)", fontWeight: 600, fontSize: 13, color: "var(--fg-strong)" }}>Related Entities</h3>
               </div>
               <div className="divide-y">
                 {entities.map((entity) => (
@@ -394,9 +419,9 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
         {/* Right: Pipeline Timeline + File Info */}
         <div className="space-y-6">
           {/* Pipeline Timeline */}
-          <div className="rounded-lg border">
-            <div className="border-b p-4 flex items-center justify-between">
-              <h3 className="font-medium">Pipeline</h3>
+          <div style={{ borderRadius: 10, border: "1px solid var(--border-faint)", background: "var(--bg-elevated)", boxShadow: "var(--trove-shadow-sm)" }}>
+            <div style={{ borderBottom: "1px solid var(--border-faint)", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h3 style={{ fontFamily: "var(--trove-sans, sans-serif)", fontWeight: 600, fontSize: 13, color: "var(--fg-strong)" }}>Pipeline</h3>
               {doc.status !== "failed" && (
                 <span className="text-xs text-muted-foreground">
                   {doc.status === "ready"
@@ -483,9 +508,9 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
           </div>
 
           {/* File Info */}
-          <div className="rounded-lg border">
-            <div className="border-b p-4">
-              <h3 className="font-medium">File Info</h3>
+          <div style={{ borderRadius: 10, border: "1px solid var(--border-faint)", background: "var(--bg-elevated)", boxShadow: "var(--trove-shadow-sm)" }}>
+            <div style={{ borderBottom: "1px solid var(--border-faint)", padding: "12px 16px" }}>
+              <h3 style={{ fontFamily: "var(--trove-sans, sans-serif)", fontWeight: 600, fontSize: 13, color: "var(--fg-strong)" }}>File Info</h3>
             </div>
             <div className="p-4 space-y-2 text-sm">
               <InfoRow label="Type" value={doc.mime_type} />
@@ -537,37 +562,118 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
 
       {/* Chat Side Panel */}
       {chatOpen && (
-        <div className="fixed top-0 right-0 w-96 h-full border-l bg-background z-30 flex flex-col">
-          <div className="flex items-center justify-between border-b p-3">
-            <h3 className="font-medium text-sm">Chat with this document</h3>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setChatOpen(false)}
-            >
-              <XCircle className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <ChatPanel documentId={documentId} scope="document" />
-          </div>
-        </div>
+        <ChatSidePanel
+          documentId={documentId}
+          onClose={() => setChatOpen(false)}
+        />
       )}
     </div>
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    uploaded: "bg-yellow-100 text-yellow-800",
-    ready: "bg-green-100 text-green-800",
-    failed: "bg-red-100 text-red-800",
-  };
-  const color = colors[status] ?? "bg-blue-100 text-blue-800";
+function ChatSidePanel({ documentId, onClose }: { documentId: string; onClose: () => void }) {
+  const isMobile = useIsMobile();
+
+  // Escape key handler
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
 
   return (
-    <span className={`rounded-full px-3 py-1 text-sm font-medium ${color}`}>
-      {status}
+    <div
+      style={{
+        position: "fixed",
+        top: isMobile ? "auto" : 0,
+        bottom: isMobile ? 0 : "auto",
+        right: 0,
+        left: isMobile ? 0 : "auto",
+        width: isMobile ? "100%" : 384,
+        height: isMobile ? "70vh" : "100%",
+        borderLeft: isMobile ? "none" : "1px solid var(--border-faint)",
+        borderTop: isMobile ? "1px solid var(--border-faint)" : "none",
+        borderRadius: isMobile ? "18px 18px 0 0" : 0,
+        background: "var(--bg-elevated)",
+        zIndex: 30,
+        display: "flex",
+        flexDirection: "column",
+        animation: isMobile
+          ? "k-sheet-in 240ms var(--trove-ease-out, ease-out) both"
+          : "k-slide-in-right 240ms var(--trove-ease-out, ease-out) both",
+        boxShadow: "var(--trove-shadow-lg)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid var(--border-faint)",
+          padding: "12px 14px",
+        }}
+      >
+        <h3 style={{ fontFamily: "var(--trove-sans, sans-serif)", fontSize: 13, fontWeight: 600, color: "var(--fg-strong)" }}>
+          Chat with this document
+        </h3>
+        <button
+          aria-label="Close chat panel"
+          onClick={onClose}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-subtle)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+          style={{
+            width: 28, height: 28, borderRadius: 7, border: 0,
+            background: "none", cursor: "pointer", display: "flex",
+            alignItems: "center", justifyContent: "center",
+            color: "var(--fg-muted)",
+            transition: "background var(--trove-dur-fast, 140ms)",
+          }}
+        >
+          <XCircle aria-hidden="true" className="h-4 w-4" />
+        </button>
+      </div>
+      <div style={{ flex: 1, overflow: "hidden" }}>
+        <ChatPanel documentId={documentId} scope="document" />
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const LABEL_MAP: Record<string, string> = {
+    uploaded: "Queued",
+    ready: "Ready",
+    failed: "Failed",
+    extracting_text: "Extracting",
+    classified: "Classified",
+    schema_built: "Building schema",
+    extracted: "Extracted",
+    verified: "Verified",
+    integrated: "Integrating",
+    vectorized: "Vectorized",
+  };
+  const styles: Record<string, { bg: string; color: string }> = {
+    uploaded:  { bg: "var(--trove-stone-100)",  color: "var(--trove-stone-600)" },
+    ready:     { bg: "var(--status-ready-bg)",  color: "var(--status-ready-fg)" },
+    failed:    { bg: "var(--status-error-bg)",  color: "var(--status-error-fg)" },
+  };
+  const s = styles[status] ?? { bg: "var(--status-processing-bg)", color: "var(--status-processing-fg)" };
+  const label = LABEL_MAP[status] ?? status;
+
+  return (
+    <span
+      style={{
+        borderRadius: 999,
+        padding: "3px 12px",
+        fontSize: 13,
+        fontWeight: 500,
+        fontFamily: "var(--trove-sans, sans-serif)",
+        background: s.bg,
+        color: s.color,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {label}
     </span>
   );
 }
@@ -576,13 +682,24 @@ function ConfidencePill({ confidence }: { confidence: number | null }) {
   if (confidence == null) return null;
 
   const pct = Math.round(confidence * 100);
-  let color = "bg-green-100 text-green-700";
-  if (confidence < 0.5) color = "bg-red-100 text-red-700";
-  else if (confidence < 0.7) color = "bg-yellow-100 text-yellow-700";
-  else if (confidence < 0.9) color = "bg-blue-100 text-blue-700";
+  let bg = "var(--status-ready-bg)";
+  let color = "var(--status-ready-fg)";
+  if (confidence < 0.5) { bg = "var(--status-error-bg)"; color = "var(--status-error-fg)"; }
+  else if (confidence < 0.7) { bg = "var(--status-processing-bg)"; color = "var(--status-processing-fg)"; }
 
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${color}`}>
+    <span
+      style={{
+        borderRadius: 999,
+        padding: "2px 8px",
+        fontSize: 11,
+        fontWeight: 600,
+        fontFamily: "var(--trove-mono, monospace)",
+        background: bg,
+        color: color,
+        whiteSpace: "nowrap",
+      }}
+    >
       {pct}%
     </span>
   );

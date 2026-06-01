@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { Send, Loader2, Database, FileText } from "lucide-react";
+import { Send, Loader2, Database, FileText, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
@@ -259,20 +259,58 @@ export function ChatPanel({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {historyLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="flex h-full items-center justify-center" style={{ flexDirection: "column", gap: 10 }}>
+            <Loader2 aria-hidden="true" className="h-5 w-5 animate-spin" style={{ color: "var(--fg-muted)" }} />
+            <p style={{ fontSize: 12, color: "var(--fg-muted)", fontFamily: "var(--trove-sans, sans-serif)" }}>
+              Loading conversation…
+            </p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground text-sm py-8">
-            {scope === "document"
-              ? "Ask anything about this document"
-              : "Ask anything about your documents"}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%",
+              gap: 12,
+              padding: "24px",
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: 14,
+                background: "var(--accent-soft)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--accent-ink)",
+              }}
+            >
+              <MessageSquare aria-hidden="true" className="h-5 w-5" />
+            </div>
+            <p
+              style={{
+                fontFamily: "var(--trove-serif, Georgia, serif)",
+                fontStyle: "italic",
+                fontSize: 17,
+                color: "var(--fg-muted)",
+              }}
+            >
+              {scope === "document"
+                ? "Ask anything about this document"
+                : "Ask anything about your documents"}
+            </p>
           </div>
         ) : null}
         {!historyLoading && messages.map((msg, i) => (
           <div
             key={i}
             className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            style={{ animation: "k-fade-in 180ms var(--trove-ease-out, ease-out) both" }}
           >
             <div
               className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
@@ -324,29 +362,70 @@ export function ChatPanel({
         ))}
         {streaming && (
           <div className="flex justify-start">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <div
+              className="bg-muted rounded-lg px-3 py-2.5"
+              style={{ display: "flex", alignItems: "center", gap: 4 }}
+              aria-label="Assistant is typing"
+            >
+              {[0, 1, 2].map((di) => (
+                <span
+                  key={di}
+                  aria-hidden="true"
+                  style={{
+                    display: "inline-block",
+                    width: 5,
+                    height: 5,
+                    borderRadius: 999,
+                    background: "var(--fg-muted)",
+                    animation: "k-typing-dot 1.2s ease infinite",
+                    animationDelay: `${di * 0.2}s`,
+                  }}
+                />
+              ))}
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input */}
-      <div className="border-t p-3 flex gap-2">
-        <Input
-          placeholder="Ask a question..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={streaming}
-          className="flex-1"
-        />
-        <Button
-          size="icon"
-          onClick={sendMessage}
-          disabled={streaming || !input.trim()}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+      <div
+        className="border-t flex flex-col gap-1.5"
+        style={{ padding: "12px 12px max(12px, env(safe-area-inset-bottom, 0px)) 12px" }}
+      >
+        <div className="flex gap-2">
+          <Input
+            placeholder="Ask a question…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={streaming}
+            className="flex-1"
+            autoFocus
+          />
+          <Button
+            size="icon"
+            onClick={sendMessage}
+            disabled={streaming || !input.trim()}
+            aria-label="Send message"
+          >
+            <Send aria-hidden="true" className="h-4 w-4" />
+          </Button>
+        </div>
+        {input.trim().length > 0 && !streaming && (
+          <p
+            style={{
+              fontSize: 11,
+              color: "var(--fg-subtle)",
+              fontFamily: "var(--trove-sans, sans-serif)",
+              textAlign: "right",
+              paddingRight: 44,
+              animation: "k-fade-in 120ms var(--trove-ease-out, ease-out) both",
+            }}
+          >
+            ↵ to send
+          </p>
+        )}
       </div>
 
       {/* Document viewer */}
@@ -381,12 +460,23 @@ function CitationBadge({
       type="button"
       onClick={() => { if (docId) onClick(docId); }}
       disabled={!docId}
-      className={`inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-xs transition-opacity ${
-        isKgFact
-          ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-          : "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-      } ${docId ? "hover:opacity-70 cursor-pointer" : "cursor-default"}`}
       title={title}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 3,
+        borderRadius: 5,
+        padding: "2px 6px",
+        fontSize: 11,
+        fontFamily: "var(--trove-mono, monospace)",
+        cursor: docId ? "pointer" : "default",
+        transition: "opacity var(--trove-dur-fast, 140ms)",
+        background: isKgFact ? "var(--trove-teal-50)" : "var(--trove-amber-50)",
+        color: isKgFact ? "var(--trove-teal-700)" : "var(--trove-amber-700)",
+        border: `1px solid ${isKgFact ? "var(--trove-teal-100)" : "var(--trove-amber-200)"}`,
+      }}
+      onMouseEnter={(e) => { if (docId) (e.currentTarget as HTMLElement).style.opacity = "0.7"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
     >
       {isKgFact ? (
         <Database className="h-3 w-3" />
