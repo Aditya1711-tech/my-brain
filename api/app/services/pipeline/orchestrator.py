@@ -626,11 +626,21 @@ class PipelineOrchestrator:
 
         # Load doc data
         result = await self.db.execute(
-            sql_text("SELECT raw_text, schema_json, doc_type FROM documents WHERE id = :doc_id"),
+            sql_text(
+                "SELECT raw_text, schema_json, doc_type, user_note "
+                "FROM documents WHERE id = :doc_id"
+            ),
             {"doc_id": str(doc.id)},
         )
         row = result.fetchone()
-        doc_type = row[2] or "unknown" if row else "unknown"  # type: ignore[index]
+        doc_type  = row[2] or "unknown" if row else "unknown"  # type: ignore[index]
+        user_note = row[3] if row else None  # type: ignore[index]
+
+        logger.info(
+            "pipeline.integration_note",
+            doc_id=str(doc.id),
+            note_len=len(user_note) if user_note else 0,
+        )
 
         # Get extracted fields
         extracted = await fields_repo.get_by_document(doc.id)
@@ -672,6 +682,7 @@ class PipelineOrchestrator:
             document_type=doc_type,
             detected_entities=detected_entities,
             extracted_fields=extracted_dicts,
+            user_note=user_note,
             trace_id=trace_id,
         )
 

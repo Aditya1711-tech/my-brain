@@ -30,6 +30,7 @@ class EntityResolver:
         detected_entities: list[dict],
         extracted_fields: list[dict],
         trace_id: str,
+        user_note: str | None = None,
     ) -> IntegrationOutput:
         """Run entity resolution: pre-filter candidates, call KI agent, persist results."""
 
