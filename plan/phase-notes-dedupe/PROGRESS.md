@@ -9,7 +9,7 @@
 
 ## Current
 
-- **Track A:** ND-C-01 (@mention parser — pure function)
+- **Track A:** ND-C-02 (mention resolver → note_entity_mentions rows)
 - **Track B:** ND-D-05 (audit: filter deleted_at IS NULL on all entity reads)
 
 ---
@@ -28,7 +28,7 @@
 | ND-B-03 | `KnowledgeIntegratorInput` — add `user_note` + prompt section | [x] | 2026-06-02 |
 | ND-B-04 | FastAPI `/note-reintegrate` endpoint (routes new entities through `entity_resolver`) | [ ] | |
 | ND-B-05 | Full-text TSV includes `user_note`; +0.3 note_match score boost | [ ] | |
-| ND-C-01 | `@mention` parser (pure function) | [ ] | |
+| ND-C-01 | `@mention` parser (pure function) | [x] | 2026-06-02 |
 | ND-C-02 | Mention resolver — `note_entity_mentions` rows; routes through `entity_resolver` for new picks | [ ] | |
 | ND-C-03 | `#tag` parser + storage to `metadata.tags` | [ ] | |
 | ND-C-04 | KG retriever — note mention path (with `deleted_at IS NULL` filter) | [ ] | |
@@ -82,6 +82,7 @@
 - 2026-06-02 | ND-D-03 | entity_resolver: batch relationships + DOB queries (one each); attach relationships+known_dob to candidate dicts; KI prompt: existing_entities format section added
 - 2026-06-02 | ND-B-03 | KnowledgeIntegratorInput.user_note field added; entity_resolver passes user_note to KI; prompt user_note section with @mention rules
 - 2026-06-02 | ND-D-04 | EntityResolution.considered_candidate_ids field; DuplicateCandidatesRepo.upsert (monotonic GREATEST confidence, skip merged/dismissed); entity_resolver writes candidate rows on uncertain; prompt output rule added
+- 2026-06-02 | ND-C-01 | mention_parser.py — parse_mentions() pure function; stop-word filtering; multi-word names; terminal punctuation; Mention(mention_text, char_offset)
 
 ---
 
@@ -115,3 +116,4 @@
 | 2026-06-02 | Track B | ND-D-03: batch relationships + DOBs onto candidate dicts; KI prompt existing_entities format section; ND-B-03 now unblocked | ND-D-03 | ND-D-04 (Track B), ND-B-03 (Track A) |
 | 2026-06-02 | Track A | ND-B-03: KnowledgeIntegratorInput.user_note field; resolver passes user_note to KI; prompt section with @mention rules (after D-03 landed) | ND-B-03 | ND-C-01 |
 | 2026-06-02 | Track B | ND-D-04: considered_candidate_ids on EntityResolution; DuplicateCandidatesRepo with monotonic UPSERT; uncertain writes candidate rows; prompt output rule | ND-D-04 | ND-D-05 |
+| 2026-06-02 | Track A | ND-C-01: mention_parser.py — parse_mentions() pure fn; stop-word list; multi-word names; terminal punctuation; Mention dataclass | ND-C-01 | ND-C-02 |
