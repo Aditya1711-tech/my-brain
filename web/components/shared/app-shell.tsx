@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { type User } from "@supabase/supabase-js";
 import { Sidebar } from "@/components/shared/sidebar";
+import { BottomNav } from "@/components/shared/bottom-nav";
 
 interface AppShellProps {
   user: User;
@@ -54,7 +55,10 @@ export function AppShell({ user, children }: AppShellProps) {
         overflow: "hidden",
       }}
     >
-      <Sidebar email={user.email ?? undefined} />
+      {/* Sidebar — desktop only (hidden on mobile via .trove-sidebar CSS class) */}
+      <div className="trove-sidebar" style={{ display: "flex", flexShrink: 0 }}>
+        <Sidebar email={user.email ?? undefined} />
+      </div>
 
       <main
         style={{
@@ -66,6 +70,9 @@ export function AppShell({ user, children }: AppShellProps) {
       >
         {children}
       </main>
+
+      {/* Bottom nav — mobile only (shown by .trove-bottom-nav CSS class) */}
+      <BottomNav />
 
       {/* Full-page drop overlay */}
       {dragActive && (

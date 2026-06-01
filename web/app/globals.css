@@ -272,6 +272,41 @@
   width: 100%;
 }
 
+/* Mobile: 2 columns on narrow phones */
+@media (max-width: 767px) {
+  .board {
+    columns: 2;
+    column-gap: 12px;
+  }
+  .board-card {
+    margin-bottom: 12px;
+  }
+}
+
+/* =========================================================================
+   Trove · Mobile layout helpers
+   ========================================================================= */
+
+/* Hide sidebar on mobile, show bottom nav */
+@media (max-width: 767px) {
+  .trove-sidebar { display: none !important; }
+  .trove-bottom-nav { display: flex !important; }
+}
+@media (min-width: 768px) {
+  .trove-sidebar { display: flex !important; }
+  .trove-bottom-nav { display: none !important; }
+}
+
+/* Safe area tokens — used by components */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --bottom-nav-height: 60px;
+  --mobile-content-pb: calc(var(--bottom-nav-height) + var(--safe-area-bottom) + 16px);
+}
+
 /* =========================================================================
    Trove · Utility classes (from kit)
    ========================================================================= */
@@ -323,6 +358,8 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Capacitor: push content below native status bar on iOS/Android */
+    padding-top: env(safe-area-inset-top, 0px);
   }
   html {
     @apply font-sans;
