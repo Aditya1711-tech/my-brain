@@ -11,6 +11,9 @@ engine = create_async_engine(
     max_overflow=10,
     pool_pre_ping=True,
     pool_recycle=280,
+    # Required when DATABASE_URL points to Supabase transaction pooler (port 6543).
+    # Supavisor in transaction mode doesn't support named prepared statements.
+    connect_args={"statement_cache_size": 0},
 )
 
 async_session_factory = async_sessionmaker(
