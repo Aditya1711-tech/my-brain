@@ -9,8 +9,8 @@
 
 ## Current
 
-- **Track A:** ND-B-04 (FastAPI /note-reintegrate endpoint)
-- **Track B:** ND-D-04 (fix uncertain path — write entity_duplicate_candidates rows)
+- **Track A:** ND-C-01 (@mention parser — pure function)
+- **Track B:** ND-D-05 (audit: filter deleted_at IS NULL on all entity reads)
 
 ---
 
@@ -43,7 +43,7 @@
 | ND-D-01 | `name_metaphone` column + backfill existing entities | [x] | 2026-06-02 |
 | ND-D-02 | Expand `find_candidates` — phonetic + DOB + doc-type; threshold 0.3→0.5 | [x] | 2026-06-02 |
 | ND-D-03 | KI — richer candidate context (relationships + doc_types + known_dob) | [x] | 2026-06-02 |
-| ND-D-04 | Fix `uncertain` path — preserve KI signal via `entity_duplicate_candidates` rows | [ ] | |
+| ND-D-04 | Fix `uncertain` path — preserve KI signal via `entity_duplicate_candidates` rows | [x] | 2026-06-02 |
 | ND-D-05 | Audit: filter `deleted_at IS NULL` on all entity reads (multi-file commit) | [ ] | |
 | ND-E-01 | `entity_duplicate_candidates` table (in ND-A-01) | [x] | 2026-06-02 |
 | ND-E-02 | Detection sweep + `duplicate_detector.py` (MAX confidence UPSERT) | [ ] | |
@@ -81,6 +81,7 @@
 - 2026-06-02 | ND-D-02 | find_candidates: trigram 0.3→0.5, deleted_at IS NULL, phonetic OR condition, DOB facts subquery, linked_doc_types correlated subquery; entity_resolver extracts DOB + forwards linked_doc_types to KI
 - 2026-06-02 | ND-D-03 | entity_resolver: batch relationships + DOB queries (one each); attach relationships+known_dob to candidate dicts; KI prompt: existing_entities format section added
 - 2026-06-02 | ND-B-03 | KnowledgeIntegratorInput.user_note field added; entity_resolver passes user_note to KI; prompt user_note section with @mention rules
+- 2026-06-02 | ND-D-04 | EntityResolution.considered_candidate_ids field; DuplicateCandidatesRepo.upsert (monotonic GREATEST confidence, skip merged/dismissed); entity_resolver writes candidate rows on uncertain; prompt output rule added
 
 ---
 
@@ -112,4 +113,5 @@
 | 2026-06-02 | Track B | ND-D-01: metaphone in requirements.txt; entities_repo.create() computes+stores metaphone; backfill_metaphone.py script | ND-D-01 | ND-D-02 |
 | 2026-06-02 | Track B | ND-D-02: find_candidates — trigram 0.5, phonetic OR, DOB facts subquery, linked_doc_types, deleted_at IS NULL; entity_resolver forwards dob + linked_doc_types | ND-D-02 | ND-D-03 |
 | 2026-06-02 | Track B | ND-D-03: batch relationships + DOBs onto candidate dicts; KI prompt existing_entities format section; ND-B-03 now unblocked | ND-D-03 | ND-D-04 (Track B), ND-B-03 (Track A) |
-| 2026-06-02 | Track A | ND-B-03: KnowledgeIntegratorInput.user_note field; resolver passes user_note to KI; prompt section with @mention rules (after D-03 landed) | ND-B-03 | ND-B-04 |
+| 2026-06-02 | Track A | ND-B-03: KnowledgeIntegratorInput.user_note field; resolver passes user_note to KI; prompt section with @mention rules (after D-03 landed) | ND-B-03 | ND-C-01 |
+| 2026-06-02 | Track B | ND-D-04: considered_candidate_ids on EntityResolution; DuplicateCandidatesRepo with monotonic UPSERT; uncertain writes candidate rows; prompt output rule | ND-D-04 | ND-D-05 |

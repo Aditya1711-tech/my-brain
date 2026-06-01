@@ -12,6 +12,8 @@ class EntityResolution(BaseModel):
     new_canonical_name: str | None = None
     aliases_to_add: list[str] = []
     reasoning: str
+    # Populated when decision == "uncertain": IDs from existing_entities that were close but inconclusive
+    considered_candidate_ids: list[str] = []
 
 
 class FactToWrite(BaseModel):

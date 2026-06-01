@@ -11,6 +11,7 @@ from app.agents.knowledge_integrator import (
     KnowledgeIntegratorAgent,
     KnowledgeIntegratorInput,
 )
+from app.repositories.duplicate_candidates_repo import DuplicateCandidatesRepo
 from app.repositories.entities_repo import EntitiesRepo
 from app.repositories.facts_repo import FactsRepo
 
@@ -22,6 +23,7 @@ class EntityResolver:
         self.db = db
         self.entities_repo = EntitiesRepo(db)
         self.facts_repo = FactsRepo(db)
+        self.dup_candidates_repo = DuplicateCandidatesRepo(db)
 
     async def resolve_and_persist(
         self,
@@ -176,6 +178,23 @@ class EntityResolver:
                     identifiers=ident,
                 )
                 entity_id_map[res.detected_name] = new_id
+
+                # For uncertain decisions: preserve KI signal as duplicate candidate rows
+                if res.decision == "uncertain" and res.considered_candidate_ids:
+                    for candidate_id in res.considered_candidate_ids:
+                        await self.dup_candidates_repo.upsert(
+                            user_id=user_id,
+                            entity_id_1=new_id,
+                            entity_id_2=candidate_id,
+                            confidence=0.5,
+                            reason="ki_uncertain",
+                            ki_reasoning=res.reasoning,
+                        )
+                    logger.info(
+                        "entity_resolver.uncertain_candidates_written",
+                        new_entity_id=new_id,
+                        considered_count=len(res.considered_candidate_ids),
+                    )
 
             # Link entity to document
             detected = next(

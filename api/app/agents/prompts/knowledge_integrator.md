@@ -44,3 +44,4 @@ Rules for using the note:
 Output rules:
 - For every detected entity, emit exactly one EntityResolution
 - Facts and relationships reference entities by their resolution's placeholder (the detected_name)
+- When `decision = "uncertain"`, populate `considered_candidate_ids` with the `id` values of the existing entities you were close to matching — this preserves the signal for future review
