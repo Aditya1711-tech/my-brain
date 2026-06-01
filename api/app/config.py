@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Inter-service auth
     backend_api_key: SecretStr
 
+    # JWT verification (Supabase project JWT secret)
+    supabase_jwt_secret: SecretStr
+
     # LLM
     anthropic_api_key: SecretStr
     openai_api_key: SecretStr

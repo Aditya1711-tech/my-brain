@@ -14,6 +14,7 @@ import {
   Pencil,
   MessageSquare,
 } from "lucide-react";
+import { DocumentViewerModal } from "@/components/shared/document-viewer-modal";
 import { Button } from "@/components/ui/button";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
 import { ChatPanel } from "@/components/chat/chat-panel";
@@ -96,6 +97,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const loadDocument = useCallback(async () => {
     const supabase = createClient();
@@ -155,7 +157,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   }, [documentId]);
 
   useEffect(() => {
-    loadDocument();
+    loadDocument(); // eslint-disable-line react-hooks/set-state-in-effect -- initial data fetch
   }, [loadDocument]);
 
   // Realtime updates for this document
@@ -205,7 +207,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const currentStatusIndex = STATUS_ORDER.indexOf(doc.status);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ padding: "40px 40px 80px" }}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
@@ -256,7 +258,6 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
               variant="outline"
               size="sm"
               onClick={async () => {
-                const apiUrl = process.env.NEXT_PUBLIC_APP_API_URL ?? "";
                 try {
                   await fetch(`/api/documents/retry`, {
                     method: "POST",
@@ -506,15 +507,18 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
           </div>
 
           {/* Open File */}
-          <a
-            href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/${doc.storage_path}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => setViewerOpen(true)}
             className="flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium hover:bg-muted transition-colors w-full"
           >
             <ExternalLink className="h-4 w-4" />
             Open File
-          </a>
+          </button>
+          <DocumentViewerModal
+            documentId={doc.id}
+            open={viewerOpen}
+            onClose={() => setViewerOpen(false)}
+          />
 
           {/* View Trace in Langfuse */}
           {process.env.NEXT_PUBLIC_LANGFUSE_URL && (
@@ -533,7 +537,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
 
       {/* Chat Side Panel */}
       {chatOpen && (
-        <div className="fixed top-14 right-0 w-96 h-[calc(100vh-3.5rem)] border-l bg-background z-30 flex flex-col">
+        <div className="fixed top-0 right-0 w-96 h-full border-l bg-background z-30 flex flex-col">
           <div className="flex items-center justify-between border-b p-3">
             <h3 className="font-medium text-sm">Chat with this document</h3>
             <Button

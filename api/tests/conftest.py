@@ -166,6 +166,14 @@ def canned_knowledge_integrator():
     })
 
 
+@pytest.fixture
+def canned_summarizer():
+    """Canned SummaryOutput dict."""
+    return _make_anthropic_response("SummaryOutput", {
+        "summary": "Indian passport issued to John Doe (A1234567), born 15 Jan 1990.",
+    })
+
+
 # ---------------------------------------------------------------------------
 # Helper: build a sequence of canned responses for a full pipeline run
 # ---------------------------------------------------------------------------
@@ -175,14 +183,20 @@ def canned_pipeline_responses(
     canned_classifier,
     canned_schema_architect,
     canned_extractor,
+    canned_summarizer,
     canned_verifier,
     canned_knowledge_integrator,
 ):
-    """Return a list of canned responses in pipeline stage order."""
+    """Return a list of canned responses in pipeline stage order.
+
+    Order matches parallel execution: classify||summarize first,
+    then schema_architect, extractor, verifier, knowledge_integrator.
+    """
     return [
-        canned_classifier,
-        canned_schema_architect,
-        canned_extractor,
-        canned_verifier,
-        canned_knowledge_integrator,
+        canned_classifier,           # [0] classify  (parallel with summarize)
+        canned_summarizer,           # [1] summarize (parallel with classify)
+        canned_schema_architect,     # [2] schema building
+        canned_extractor,            # [3] extraction
+        canned_verifier,             # [4] verification
+        canned_knowledge_integrator, # [5] integration (parallel with vectorize)
     ]

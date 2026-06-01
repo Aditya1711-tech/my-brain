@@ -23,6 +23,7 @@ STATUS_TO_STAGE: dict[str, str] = {
     "extracted": "verification",
     "verified": "integration",
     "integrated": "vectorization",
+    "vectorized": "finalization",
 }
 
 

@@ -8,11 +8,11 @@ Update after each milestone or non-trivial decision. Sessions resume by reading 
 
 > What's deployed for Phase 1.5, what's working, what's pending.
 
-- **Status:** Day 1 in progress (4/7 tasks done)
-- **Deployed:** Phase 1 (`v1.0-phase-1`) on main + production
-- **Done:** SETUP-01 (bootstrap), BENCH-01 (baseline), HARNESS-01 (D-AGENT-01 singleton fix), HARNESS-02 (D-RETRY-01 retry_count fix)
-- **In progress:** HARNESS-03 (LLM API retry with backoff)
-- **Remaining Day 1:** SETUP-02 (test harness), SETUP-03 (merge + tag)
+- **Status:** Phase 1.5 code-complete. Pending: deploy + live benchmarks + demo recording + tag.
+- **All code tasks closed:** Days 1–5 complete (36 tasks). 183 backend tests pass. 0 TS errors, 0 lint errors.
+- **Defects:** 12/14 closed with regression tests. 2 LOW deferred (D-BFF-FOLDERS-01, D-RECHARTS-01/D-BLACK-01).
+- **Benchmarks deferred:** D2-BENCH-02, D3-BENCH-03, D5-BENCH-05 — run after deploy.
+- **Demo recording deferred:** D5-INTEG-03 — requires live deployment.
 
 ## Decisions made
 
@@ -66,20 +66,8 @@ Captured 2026-05-25, 5 documents (passport ×2, aadhaar ×2, trade licence ×1).
 - Classification is the cheapest LLM stage at ~5s.
 - Wall-clock times showed large gaps vs sum for some docs, indicating queue or retry delays.
 
-### After Day 1
-_TBD_
-
-### After Day 2
-_TBD_
-
-### After Day 3
-_TBD_
-
-### After Day 4
-_TBD_
-
-### Final (Phase 1.5 close)
-_TBD_
+### After Day 1–5 (all deferred — run after deploy)
+Benchmarks D2-BENCH-02, D3-BENCH-03, and D5-BENCH-05 deferred. Run `scripts/bench_phase_1_5.py` post-deploy to capture final numbers and compare against SLO targets.
 
 ## Schema state
 
@@ -87,14 +75,21 @@ _TBD_
 
 - `0003` (2026-05-26): `extracted_fields` + `is_grounded`, `groundedness_method`, `importance`, `retry_budget`, `retry_budget_remaining`; `documents` + `processing_state` JSONB
 
+- `0004` (2026-05-30): `chat_threads` (scope, document_id, title) + `chat_messages` (thread_id, role, content, citations JSONB) + RLS on both
+
 ### Pending migrations
-- New: `chat_threads`, `chat_messages` + RLS
+_(none)_
 
 ## API endpoints added or changed
 
 > Append as work lands. Format: `METHOD /path — change — owner track`.
 
-_(none yet)_
+- `POST /chat` — hybrid KG+vector chat with SSE streaming, thread history, dual citations — Day 4
+- `GET /threads` — list user's chat threads — Day 4
+- `GET /threads/{id}/messages` — get thread messages with citations — Day 4
+- `DELETE /threads/{id}` — delete chat thread — Day 4
+- `POST /search` — added JWT auth (was unprotected) — Day 4
+- `POST /enqueue` — changed from query param to JSON body — Day 5
 
 ## Agents and services added
 
@@ -116,7 +111,10 @@ _(none yet)_
 
 > Tribal knowledge from doing the work.
 
-_(none yet — append as found)_
+- `_sse()` helper spreads citation dict into payload, overriding `type` field — citation events have `type: "kg_fact"/"chunk"`, not `type: "citation"`. Frontend already handled this; backend persistence did not (fixed D-CITATIONS-01).
+- Next.js 16 ESLint now flags `useEffect(() => { loadData() })` as `set-state-in-effect`. Suppressed with inline comments; real fix is React 19 data-fetching patterns (Phase 2).
+- `react-force-graph-2d` generic types don't accept custom node interfaces directly — need `as` casts on all callbacks.
+- SQLAlchemy `text()` executemany still does N round-trips; true single-statement multi-row INSERT requires building dynamic param names.
 
 ## Phase 1 doc corrections
 
@@ -178,4 +176,17 @@ _(none yet)_
 
 > One entry per day completed. Date + 3-line summary.
 
-_(none yet)_
+**Day 1 (2026-05-25/26)** — Foundations + defect fixes + test harness.
+Fixed D-AGENT-01 (singleton), D-RETRY-01 (retry_count), D-LLM-RETRY-01 (backoff). Baseline benchmark captured. Test harness scaffolded with conftest + fixtures.
+
+**Day 2 (2026-05-26)** — Self-healing harness core.
+Schema migration (groundedness + retry budget + processing_state). Groundedness module (31 tests). Adaptive retry loop in orchestrator. Vectorization tracing.
+
+**Day 3 (2026-05-30)** — Parallelism + summarizer + search.
+LLM summarizer agent. Within-document parallelism (asyncio.gather for classify+summarize, integrate+vectorize). Pipeline resumability via processing_state JSONB. VocabCache with TTL. Fuzzy match. Semaphore caps.
+
+**Day 4 (2026-05-30)** — Hybrid chat + JWT auth.
+Chat threads schema + BFF. Question router. KG retriever with entity resolution + relationship traversal. Vector retriever upgrade (BM25 + entity boost). Fusion + responder with history. JWT auth on /search /chat /threads. Chat quality eval (15 tests).
+
+**Day 5 (2026-05-30)** — Polish + final sweep.
+Bulk insert optimization. Citation persistence fix. Enqueue contract fix. TypeScript + lint cleanup. 183 backend tests, 0 TS errors, 0 lint errors.

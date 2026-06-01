@@ -1,5 +1,6 @@
 """Pipeline orchestrator — drives a document through all stages."""
 
+import asyncio
 import time
 from uuid import UUID
 
@@ -10,8 +11,10 @@ from app.config import settings
 from app.agents.classifier import ClassifierAgent, ClassifierInput
 from app.agents.extractor import ExtractorAgent, ExtractorInput
 from app.agents.schema_architect import SchemaArchitectAgent, SchemaArchitectInput
+from app.agents.summarizer import SummarizerAgent, SummarizerInput
 from app.agents.verifier import VerifierAgent, VerifierInput
 from app.services.pipeline.groundedness import check_groundedness
+from app.db.session import async_session_factory
 from app.integrations.supabase_client import supabase
 from app.parsing.router import parse_file
 from app.repositories.documents_repo import DocumentsRepo
@@ -38,6 +41,8 @@ class PipelineOrchestrator:
         self.docs_repo = DocumentsRepo(db)
         self.events_repo = EventsRepo(db)
         self.db = db
+        self._vectorization_done = False
+        self._page_image_paths: list[str] = []
 
     async def run(self, doc_id: UUID) -> None:
         """Drive a document through the pipeline until ready or failed."""
@@ -47,6 +52,10 @@ class PipelineOrchestrator:
             return
 
         trace_id = str(doc_id)
+
+        # Hydrate from processing_state if resuming a partially-processed doc
+        if doc.status != "uploaded":
+            await self._load_processing_state(doc_id)
 
         while doc.status not in ("ready", "failed"):
             stage = STATUS_TO_STAGE.get(doc.status)
@@ -69,6 +78,8 @@ class PipelineOrchestrator:
                 await self._run_stage(doc, stage, trace_id)
                 duration_ms = int((time.monotonic() - start) * 1000)
 
+                # Persist state before status transition for crash resumability
+                await self._save_processing_state(doc_id)
                 await self.docs_repo.update_status(doc_id, next_stat)
                 await self.events_repo.insert(
                     user_id=doc.user_id,
@@ -116,7 +127,7 @@ class PipelineOrchestrator:
         if stage == "text_extraction":
             await self._extract_text(doc, trace_id)
         elif stage == "classification":
-            await self._classify(doc, trace_id)
+            await self._classify_and_summarize(doc, trace_id)
         elif stage == "schema_building":
             await self._build_schema(doc, trace_id)
         elif stage == "extraction":
@@ -124,11 +135,73 @@ class PipelineOrchestrator:
         elif stage == "verification":
             await self._verify(doc, trace_id)
         elif stage == "integration":
-            await self._integrate(doc, trace_id)
+            await self._integrate_and_vectorize(doc, trace_id)
         elif stage == "vectorization":
-            await self._vectorize(doc, trace_id)
+            if self._vectorization_done:
+                logger.info("pipeline.vectorization_already_done", doc_id=str(doc.id))
+            else:
+                await self._vectorize(doc, trace_id)
+        elif stage == "finalization":
+            await self._generate_thumbnail(doc)
         else:
             logger.info("pipeline.stage_stub", stage=stage, doc_id=str(doc.id))
+
+    async def _save_processing_state(self, doc_id: UUID) -> None:
+        """Persist intermediate pipeline state for crash resumability."""
+        import json
+        from sqlalchemy import text as sql_text
+
+        state = {
+            "page_image_paths": self._page_image_paths,
+            "vectorization_done": self._vectorization_done,
+        }
+        await self.db.execute(
+            sql_text("""
+                UPDATE documents
+                SET processing_state = CAST(:state AS jsonb), updated_at = now()
+                WHERE id = :doc_id
+            """),
+            {"state": json.dumps(state), "doc_id": str(doc_id)},
+        )
+        await self.db.commit()
+
+    async def _load_processing_state(self, doc_id: UUID) -> None:
+        """Hydrate pipeline state from DB for crash recovery."""
+        import json
+        from types import SimpleNamespace
+        from sqlalchemy import text as sql_text
+
+        result = await self.db.execute(
+            sql_text("SELECT processing_state FROM documents WHERE id = :doc_id"),
+            {"doc_id": str(doc_id)},
+        )
+        row = result.fetchone()
+        if not row or not row[0]:
+            return
+
+        state = row[0] if isinstance(row[0], dict) else json.loads(row[0])
+
+        # Restore page images from Storage
+        self._page_image_paths = state.get("page_image_paths", [])
+        if self._page_image_paths:
+            page_images: list[bytes] = []
+            bucket_name = settings.supabase_storage_bucket
+            for path in self._page_image_paths:
+                try:
+                    img_bytes = supabase.storage.from_(bucket_name).download(path)
+                    page_images.append(img_bytes)
+                except Exception as exc:
+                    logger.warning(
+                        "pipeline.page_image_download_failed",
+                        doc_id=str(doc_id),
+                        path=path,
+                        error=str(exc),
+                    )
+            if page_images:
+                self._last_extraction = SimpleNamespace(page_images=page_images)
+
+        if state.get("vectorization_done"):
+            self._vectorization_done = True
 
     async def _extract_text(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Download file from Supabase storage and parse it."""
@@ -154,37 +227,77 @@ class PipelineOrchestrator:
         )
         await self.db.commit()
 
+        # Upload page images to Storage for crash resumability
+        self._page_image_paths = []
+        if extraction.page_images:
+            bucket_name = settings.supabase_storage_bucket
+            for idx, img_bytes in enumerate(extraction.page_images):
+                path = f"page-images/{doc.id}/page_{idx}.png"
+                try:
+                    supabase.storage.from_(bucket_name).upload(
+                        path, img_bytes,
+                        file_options={"content-type": "image/png", "upsert": "true"},
+                    )
+                    self._page_image_paths.append(path)
+                except Exception as exc:
+                    logger.warning(
+                        "pipeline.page_image_upload_failed",
+                        doc_id=str(doc.id),
+                        page_idx=idx,
+                        error=str(exc),
+                    )
+
         # Store extraction data for next stages
         self._last_extraction = extraction
 
-    async def _classify(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
-        """Run classifier agent on the extracted text."""
+    async def _classify_and_summarize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run classification and summarization in parallel.
+
+        Both agents only need raw_text, so we pre-read it once and
+        run both LLM calls concurrently. DB writes are sequential.
+        Summarize failure is non-fatal (logged, pipeline continues).
+        """
         from sqlalchemy import text as sql_text
 
-        # Get the raw text
+        # Pre-read shared data
         result = await self.db.execute(
             sql_text("SELECT raw_text FROM documents WHERE id = :doc_id"),
             {"doc_id": str(doc.id)},
         )
         row = result.fetchone()
-        raw_text = row[0] if row else ""  # type: ignore[index]
+        raw_text = row[0] or "" if row else ""  # type: ignore[index]
 
-        # Get page images if available
         extraction = getattr(self, "_last_extraction", None)
         page_image = None
         if extraction and extraction.page_images:
             page_image = extraction.page_images[0]
 
-        input_data = ClassifierInput(
-            text_sample=raw_text[:6000] if raw_text else "",
-            has_image=page_image is not None,
+        # Run both LLM calls in parallel (no DB access during this phase)
+        classify_coro = ClassifierAgent().run(
+            ClassifierInput(
+                text_sample=raw_text[:6000] if raw_text else "",
+                has_image=page_image is not None,
+            ),
+            trace_id=trace_id,
+            page_image=page_image,
+        )
+        summarize_coro = SummarizerAgent().run(
+            SummarizerInput(
+                document_type="document",
+                text_sample=raw_text[:4000],
+            ),
+            trace_id=trace_id,
         )
 
-        output = await ClassifierAgent().run(
-            input_data, trace_id=trace_id, page_image=page_image,
+        classify_output, summarize_output = await asyncio.gather(
+            classify_coro, summarize_coro, return_exceptions=True,
         )
 
-        # Update document with classification results
+        # Classification failure is fatal
+        if isinstance(classify_output, BaseException):
+            raise classify_output
+
+        # Write classification results to DB
         await self.db.execute(
             sql_text("""
                 UPDATE documents
@@ -198,16 +311,33 @@ class PipelineOrchestrator:
                 WHERE id = :doc_id
             """),
             {
-                "doc_type": output.document_type,
-                "domain": output.domain,
-                "country": output.country,
-                "language": output.primary_language,
-                "is_scanned": output.is_scanned,
-                "is_handwritten": output.is_handwritten,
+                "doc_type": classify_output.document_type,
+                "domain": classify_output.domain,
+                "country": classify_output.country,
+                "language": classify_output.primary_language,
+                "is_scanned": classify_output.is_scanned,
+                "is_handwritten": classify_output.is_handwritten,
                 "doc_id": str(doc.id),
             },
         )
         await self.db.commit()
+
+        # Summarize failure is non-fatal
+        if isinstance(summarize_output, BaseException):
+            logger.warning(
+                "pipeline.summarize_failed_nonfatal",
+                doc_id=str(doc.id),
+                error=str(summarize_output),
+            )
+        elif summarize_output.summary:
+            await self.db.execute(
+                sql_text("""
+                    UPDATE documents SET summary = :summary, updated_at = now()
+                    WHERE id = :doc_id
+                """),
+                {"summary": summarize_output.summary[:500], "doc_id": str(doc.id)},
+            )
+            await self.db.commit()
 
     async def _build_schema(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Run schema architect agent."""
@@ -302,19 +432,6 @@ class PipelineOrchestrator:
             for f in output.fields
         ]
         await fields_repo.bulk_insert(field_creates)
-
-        # Generate a summary from the extracted fields
-        summary_parts = [f"{f.name}: {f.value}" for f in output.fields if f.value]
-        summary = "; ".join(summary_parts[:10])
-        if summary:
-            await self.db.execute(
-                sql_text("""
-                    UPDATE documents SET summary = :summary, updated_at = now()
-                    WHERE id = :doc_id
-                """),
-                {"summary": summary[:500], "doc_id": str(doc.id)},
-            )
-            await self.db.commit()
 
         # Store extraction output for verifier
         self._last_extraction_output = output
@@ -558,6 +675,88 @@ class PipelineOrchestrator:
             trace_id=trace_id,
         )
 
+    async def _integrate_and_vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
+        """Run integration and vectorization in parallel.
+
+        Uses a separate DB session for vectorization to avoid
+        concurrent access on the orchestrator's AsyncSession.
+        Integration failure is fatal; vectorize failure is non-fatal
+        (retried in the subsequent vectorization stage).
+        """
+
+        async def _vectorize_parallel() -> None:
+            async with async_session_factory() as vec_db:
+                await vectorize_document(vec_db, doc.id, doc.user_id, trace_id=trace_id)
+
+        integrate_result, vectorize_result = await asyncio.gather(
+            self._integrate(doc, trace_id),
+            _vectorize_parallel(),
+            return_exceptions=True,
+        )
+
+        # Integration failure is fatal
+        if isinstance(integrate_result, BaseException):
+            raise integrate_result
+
+        # Vectorize failure is non-fatal; will retry in vectorization stage
+        if isinstance(vectorize_result, BaseException):
+            logger.warning(
+                "pipeline.vectorize_parallel_failed",
+                doc_id=str(doc.id),
+                error=str(vectorize_result),
+            )
+        else:
+            self._vectorization_done = True
+
     async def _vectorize(self, doc, trace_id: str) -> None:  # type: ignore[no-untyped-def]
         """Chunk text and generate embeddings."""
         await vectorize_document(self.db, doc.id, doc.user_id, trace_id=trace_id)
+
+    async def _generate_thumbnail(self, doc) -> None:  # type: ignore[no-untyped-def]
+        """Resize the first page image to a JPEG thumbnail and upload to storage."""
+        import io
+
+        from PIL import Image
+
+        bucket = settings.supabase_storage_bucket
+        img_bytes: bytes | None = None
+
+        # Prefer already-uploaded page image (PDFs, scanned docs)
+        if self._page_image_paths:
+            try:
+                img_bytes = supabase.storage.from_(bucket).download(self._page_image_paths[0])
+            except Exception:
+                pass
+
+        # Fallback: use in-memory page images from extraction (avoids storage round-trip)
+        if img_bytes is None:
+            extraction = getattr(self, "_last_extraction", None)
+            page_images = getattr(extraction, "page_images", None)
+            if page_images:
+                img_bytes = page_images[0]
+
+        # Fallback: original file is an image
+        if img_bytes is None and doc.mime_type.startswith("image/"):
+            try:
+                img_bytes = supabase.storage.from_(bucket).download(doc.storage_path)
+            except Exception:
+                pass
+
+        if img_bytes is None:
+            return  # Not previewable; skip silently
+
+        try:
+            img = Image.open(io.BytesIO(img_bytes))
+            img = img.convert("RGB")  # strip alpha for JPEG
+            img.thumbnail((600, 800), Image.LANCZOS)
+            out = io.BytesIO()
+            img.save(out, format="JPEG", quality=82, optimize=True)
+            supabase.storage.from_(bucket).upload(
+                f"thumbnails/{doc.id}.jpg",
+                out.getvalue(),
+                file_options={"content-type": "image/jpeg", "upsert": "true"},
+            )
+            logger.info("pipeline.thumbnail_generated", doc_id=str(doc.id))
+        except Exception:
+            logger.exception("pipeline.thumbnail_failed", doc_id=str(doc.id))
+            # Non-fatal — cards fall back to the decorative placeholder

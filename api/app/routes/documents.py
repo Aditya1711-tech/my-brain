@@ -3,6 +3,7 @@ from uuid import UUID
 import structlog
 from arq.connections import ArqRedis, create_pool
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from app.config import settings
 from app.deps import DbSession, VerifiedApiKey
@@ -22,13 +23,18 @@ async def get_arq_pool() -> ArqRedis:
     return _arq_pool
 
 
+class EnqueueRequest(BaseModel):
+    doc_id: UUID
+
+
 @router.post("/enqueue")
 async def enqueue_document(
-    doc_id: UUID,
+    body: EnqueueRequest,
     _api_key: VerifiedApiKey,
     db: DbSession,
 ) -> dict[str, str]:
     """Enqueue a document for processing. Called by the Next.js BFF."""
+    doc_id = body.doc_id
     repo = DocumentsRepo(db)
     doc = await repo.get_by_id(doc_id)
     if doc is None:

@@ -135,7 +135,14 @@ async def test_pipeline_completes_all_stages(
         patch("app.services.pipeline.orchestrator.parse_file") as mock_parse,
         patch("app.services.pipeline.orchestrator.vectorize_document", new_callable=AsyncMock),
         patch("app.services.pipeline.orchestrator.EntityResolver") as MockResolver,
+        patch("app.services.pipeline.orchestrator.async_session_factory") as mock_session_factory,
     ):
+        # Mock session factory for parallel vectorization
+        mock_vec_session = AsyncMock()
+        mock_vec_session.__aenter__ = AsyncMock(return_value=mock_vec_session)
+        mock_vec_session.__aexit__ = AsyncMock(return_value=False)
+        mock_session_factory.return_value = mock_vec_session
+
         # Mock file download + parsing
         mock_bucket = MagicMock()
         mock_bucket.download.return_value = b"fake pdf bytes"
@@ -290,16 +297,17 @@ async def test_verify_retries_ungrounded_field(
         "detected_entities": [],
     })
 
-    # Pipeline order: classifier, schema_architect, extractor,
+    # Pipeline order: classifier||summarizer, schema_architect, extractor,
     # verifier (retry), retry_extractor, verifier (accept), integrator
     responses = [
-        canned_pipeline_responses[0],  # classifier
-        canned_pipeline_responses[1],  # schema_architect
-        canned_pipeline_responses[2],  # extractor
+        canned_pipeline_responses[0],  # classifier  (parallel)
+        canned_pipeline_responses[1],  # summarizer  (parallel)
+        canned_pipeline_responses[2],  # schema_architect
+        canned_pipeline_responses[3],  # extractor
         verifier_with_retry,           # first verify → triggers retry
         retry_extractor,               # retry extractor
         verifier_after_retry,          # second verify → accepts
-        canned_pipeline_responses[4],  # knowledge integrator
+        canned_pipeline_responses[5],  # knowledge integrator
     ]
     mock_create_message.side_effect = responses
 
@@ -322,7 +330,14 @@ async def test_verify_retries_ungrounded_field(
         patch("app.services.pipeline.orchestrator.parse_file") as mock_parse,
         patch("app.services.pipeline.orchestrator.vectorize_document", new_callable=AsyncMock),
         patch("app.services.pipeline.orchestrator.EntityResolver") as MockResolver,
+        patch("app.services.pipeline.orchestrator.async_session_factory") as mock_session_factory,
     ):
+        # Mock session factory for parallel vectorization
+        mock_vec_session = AsyncMock()
+        mock_vec_session.__aenter__ = AsyncMock(return_value=mock_vec_session)
+        mock_vec_session.__aexit__ = AsyncMock(return_value=False)
+        mock_session_factory.return_value = mock_vec_session
+
         mock_bucket = MagicMock()
         mock_bucket.download.return_value = b"fake pdf bytes"
         mock_supabase.storage.from_.return_value = mock_bucket

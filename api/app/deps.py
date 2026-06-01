@@ -1,6 +1,7 @@
-from collections.abc import AsyncGenerator
 from typing import Annotated
+from uuid import UUID
 
+import jwt
 from fastapi import Depends, Header, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,6 +11,10 @@ from app.db.session import get_db
 # Re-export for convenience
 DbSession = Annotated[AsyncSession, Depends(get_db)]
 
+
+# ---------------------------------------------------------------------------
+# Inter-service auth (BFF → backend, e.g. /enqueue)
+# ---------------------------------------------------------------------------
 
 async def verify_api_key(
     x_api_key: Annotated[str, Header()],
@@ -21,3 +26,40 @@ async def verify_api_key(
 
 
 VerifiedApiKey = Annotated[str, Depends(verify_api_key)]
+
+
+# ---------------------------------------------------------------------------
+# User-facing JWT auth (Supabase access_token on /search /chat /threads)
+# ---------------------------------------------------------------------------
+
+# Supabase JWKS endpoint — serves the public keys for ES256 token verification
+_jwks_url = f"{settings.next_public_supabase_url}/auth/v1/.well-known/jwks.json"
+_jwk_client = jwt.PyJWKClient(_jwks_url, cache_keys=True, lifespan=3600)
+
+
+async def verify_jwt(
+    authorization: Annotated[str | None, Header()] = None,
+) -> UUID:
+    """Verify Supabase JWT from Authorization header and return user_id."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=401,
+            detail="Missing or invalid Authorization header",
+        )
+    token = authorization.removeprefix("Bearer ").strip()
+    try:
+        signing_key = _jwk_client.get_signing_key_from_jwt(token)
+        payload = jwt.decode(
+            token,
+            signing_key.key,
+            algorithms=["ES256"],
+            audience="authenticated",
+        )
+        return UUID(payload["sub"])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except (jwt.InvalidTokenError, KeyError, ValueError):
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+
+VerifiedUser = Annotated[UUID, Depends(verify_jwt)]
