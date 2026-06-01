@@ -9,7 +9,7 @@
 
 ## Current
 
-- **Track A:** ND-A-04 (@mention autocomplete in note panel)
+- **Track A:** ND-B-01 (vectorizer — include note chunk at index 0)
 - **Track B:** ND-D-01 (name_metaphone column + backfill)
 - **Track B:** ND-D-01 (name_metaphone column + backfill)
 
@@ -22,7 +22,7 @@
 | ND-A-01 | DB migration — notes+dedupe schema | [x] | 2026-06-02 |
 | ND-A-02 | Upload UI — notes textarea in dropzone | [x] | 2026-06-02 |
 | ND-A-03 | Document detail — editable notes panel | [x] | 2026-06-02 |
-| ND-A-04 | `@mention` autocomplete in note panel (with `deleted_at IS NULL` filter) | [ ] | |
+| ND-A-04 | `@mention` autocomplete in note panel (with `deleted_at IS NULL` filter) | [x] | 2026-06-02 |
 | ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [x] | 2026-06-02 |
 | ND-B-01 | Vectorizer — note chunk at index 0 with locked format; body chunks shift to index 1+ | [ ] | |
 | ND-B-02 | Orchestrator — load `user_note` in `_integrate` | [ ] | |
@@ -75,6 +75,7 @@
 - 2026-06-02 | ND-A-02 | Upload UI — notes textarea (shared per-batch, 2000 char limit + counter, user_note in POST body)
 - 2026-06-02 | ND-A-05 | PATCH /api/documents/[id]/note BFF — updates user_note, resets indexed_at, calls note-reintegrate (non-blocking)
 - 2026-06-02 | ND-A-03 | Document detail — NotesPanel component; read/edit modes; @token+#tag rendering; PATCH on save
+- 2026-06-02 | ND-A-04 | MentionAutocomplete — @entity debounced (200ms, deleted_at IS NULL), #tag lazy-load, keyboard nav, resolved_mentions forwarded to PATCH+note-reintegrate
 
 ---
 
@@ -100,3 +101,4 @@
 | 2026-06-02 | Track A | ND-A-02: dropzone notes textarea + user_note in POST body | ND-A-02 | ND-A-05, ND-D-01 |
 | 2026-06-02 | Track A | ND-A-05: PATCH /api/documents/[id]/note BFF; non-blocking note-reintegrate call | ND-A-05 | ND-A-03 |
 | 2026-06-02 | Track A | ND-A-03: NotesPanel — read/edit modes, resolved/unresolved @mention rendering, #tag chips | ND-A-03 | ND-A-04 |
+| 2026-06-02 | Track A | ND-A-04: MentionAutocomplete — entity search, #tag autocomplete, resolved_mentions forwarded to PATCH | ND-A-04 | ND-B-01 |
