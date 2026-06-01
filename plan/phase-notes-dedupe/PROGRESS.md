@@ -9,7 +9,7 @@
 
 ## Current
 
-- **Track A:** ND-C-04 (KG retriever — note mention path)
+- **Track A:** ND-D-05 (audit: filter deleted_at IS NULL on all entity reads — shared with Track B)
 - **Track B:** ND-D-05 (audit: filter deleted_at IS NULL on all entity reads)
 
 ---
@@ -31,7 +31,7 @@
 | ND-C-01 | `@mention` parser (pure function) | [x] | 2026-06-02 |
 | ND-C-02 | Mention resolver — `note_entity_mentions` rows; routes through `entity_resolver` for new picks | [x] | 2026-06-02 |
 | ND-C-03 | `#tag` parser + storage to `metadata.tags` | [x] | 2026-06-02 |
-| ND-C-04 | KG retriever — note mention path (with `deleted_at IS NULL` filter) | [ ] | |
+| ND-C-04 | KG retriever — note mention path (with `deleted_at IS NULL` filter) | [x] | 2026-06-02 |
 
 ---
 
@@ -87,6 +87,7 @@
 - 2026-06-02 | ND-B-04 | revectorize_note_chunk() added to vectorizer.py; note_reintegrate.py route; registered in routes/__init__.py; Langfuse note_reintegration span; sets user_note_indexed_at
 - 2026-06-02 | ND-B-05 | query.py _hybrid_search: note_match tsvector flag in BM25 SELECT; +0.3 boost on _score; merged results sorted by _score desc; TSV trigger from ND-A-01 covers the rest
 - 2026-06-02 | ND-C-03 | tag_parser.py — parse_tags() regex (?<!\w)#([a-zA-Z]\w*); store_tags() JSONB set-union UPSERT into metadata.tags; idempotent
+- 2026-06-02 | ND-C-04 | kg_retriever.py — _note_mention_facts_for_entities(); retrieve() step 3 note mention path; deleted_at IS NULL on entities+docs JOIN; synthesized as KGFact(field_name=mentioned_in_note)
 
 ---
 
@@ -125,3 +126,4 @@
 | 2026-06-02 | Track A | ND-B-04: revectorize_note_chunk in vectorizer.py; POST /note-reintegrate route; note_reintegration Langfuse span; sets user_note_indexed_at | ND-B-04 | ND-B-05 |
 | 2026-06-02 | Track A | ND-B-05: _hybrid_search note_match tsvector flag; +0.3 _score boost; sort by _score desc | ND-B-05 | ND-C-03 |
 | 2026-06-02 | Track A | ND-C-03: tag_parser.py — parse_tags(); store_tags() JSONB set-union into metadata.tags | ND-C-03 | ND-C-04 |
+| 2026-06-02 | Track A | ND-C-04: kg_retriever _note_mention_facts_for_entities; retrieve() step 3 note path; deleted_at IS NULL filter | ND-C-04 | ND-D-05 |

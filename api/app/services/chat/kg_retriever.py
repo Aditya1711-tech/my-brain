@@ -296,12 +296,19 @@ async def retrieve(
                 )
                 facts.extend(rel_facts)
 
-    # 3. Field-name search when no specific entity resolved
+    # 3. Note mention path — documents where resolved entities appear in user notes
+    if resolved_entities:
+        note_facts = await _note_mention_facts_for_entities(
+            db, user_id, [ent.entity_id for ent in resolved_entities],
+        )
+        facts.extend(note_facts)
+
+    # 4. Field-name search when no specific entity resolved
     if not resolved_entities and hint.field_terms:
         field_facts = await _facts_by_field_names(db, user_id, hint.field_terms)
         facts.extend(field_facts)
 
-    # 4. Time filter
+    # 5. Time filter
     if hint.time_terms:
         facts = _filter_by_time(facts, hint.time_terms)
 
@@ -383,6 +390,59 @@ async def _facts_by_field_names(
         params,
     )
     return [_row_to_fact(r) for r in result.mappings().fetchall()]
+
+
+async def _note_mention_facts_for_entities(
+    db: AsyncSession,
+    user_id: UUID,
+    entity_ids: list[UUID],
+) -> list[KGFact]:
+    """Return pseudo-facts for documents that mention the given entities via user notes.
+
+    Filters entities.deleted_at IS NULL and documents.deleted_at IS NULL so merged
+    or deleted entities/docs never surface here.
+    """
+    if not entity_ids:
+        return []
+
+    id_ph = ", ".join(f":eid_{i}" for i in range(len(entity_ids)))
+    id_params = {f"eid_{i}": str(eid) for i, eid in enumerate(entity_ids)}
+
+    result = await db.execute(
+        text(f"""
+            SELECT
+                nem.entity_id,
+                e.canonical_name,
+                d.id          AS document_id,
+                d.original_filename,
+                d.user_note,
+                d.created_at
+            FROM note_entity_mentions nem
+            JOIN entities  e ON e.id = nem.entity_id  AND e.deleted_at IS NULL
+            JOIN documents d ON d.id = nem.document_id AND d.deleted_at IS NULL
+            WHERE nem.entity_id IN ({id_ph})
+              AND d.user_id = :uid
+        """),
+        {"uid": str(user_id), **id_params},
+    )
+
+    facts: list[KGFact] = []
+    for row in result.mappings().fetchall():
+        note_text = row["user_note"] or ""
+        note_preview = note_text[:300] + "…" if len(note_text) > 300 else note_text
+        facts.append(KGFact(
+            entity_id=UUID(str(row["entity_id"])),
+            entity_name=row["canonical_name"],
+            field_name="mentioned_in_note",
+            field_value=note_preview,
+            field_type="text",
+            confidence=0.9,
+            source_document_id=UUID(str(row["document_id"])),
+            source_document_name=row["original_filename"],
+            valid_from=row["created_at"],
+            valid_until=None,
+        ))
+    return facts
 
 
 def _row_to_fact(row: dict) -> KGFact:
