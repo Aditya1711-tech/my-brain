@@ -15,6 +15,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { DocumentViewerModal } from "@/components/shared/document-viewer-modal";
+import { NotesPanel } from "@/components/document/notes-panel";
 import { Button } from "@/components/ui/button";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
 import { ChatPanel } from "@/components/chat/chat-panel";
@@ -35,6 +36,7 @@ interface DocumentDetail {
   is_scanned: boolean | null;
   is_handwritten: boolean | null;
   summary: string | null;
+  user_note: string | null;
   created_at: string;
   updated_at: string;
   failure_reason: string | null;
@@ -301,6 +303,9 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
           <p style={{ fontSize: 14, color: "var(--fg-muted)", lineHeight: 1.6, fontFamily: "var(--trove-sans, sans-serif)" }}>{doc.summary}</p>
         </div>
       )}
+
+      {/* Notes panel — always shown; encourages note-adding for new docs */}
+      <NotesPanel documentId={documentId} initialNote={doc.user_note} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Extracted Fields */}
