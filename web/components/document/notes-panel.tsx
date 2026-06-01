@@ -4,12 +4,15 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  MentionAutocomplete,
+  type ResolvedMention,
+} from "@/components/shared/mention-autocomplete";
 
 const NOTE_MAX = 2000;
 
-interface ResolvedMention {
-  mention_text: string;
-  entity_id: string;
+// Extended with canonical_name for read-mode rendering (loaded from DB join)
+interface ResolvedMentionWithName extends ResolvedMention {
   canonical_name: string;
 }
 
@@ -20,9 +23,12 @@ interface NotesPanelProps {
 
 export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
   const [note, setNote] = useState(initialNote ?? "");
-  const [resolvedMentions, setResolvedMentions] = useState<ResolvedMention[]>([]);
+  // Mentions loaded from DB (for read-mode chip rendering)
+  const [resolvedMentions, setResolvedMentions] = useState<ResolvedMentionWithName[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState("");
+  // Resolved mentions confirmed via autocomplete during current edit session
+  const [editResolvedMentions, setEditResolvedMentions] = useState<ResolvedMention[]>([]);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   // Load resolved @mention rows (written by ND-C-02 mention resolver)
@@ -42,7 +48,7 @@ export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
           .is("deleted_at", null); // never show merged entities
 
         if (entityRows) {
-          const merged: ResolvedMention[] = mentionRows.map(
+          const merged: ResolvedMentionWithName[] = mentionRows.map(
             (r: { mention_text: string; entity_id: string }) => ({
               mention_text: r.mention_text,
               entity_id: r.entity_id,
@@ -58,6 +64,10 @@ export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
 
   const handleEdit = () => {
     setEditText(note);
+    // Seed edit session with already-resolved mentions from DB
+    setEditResolvedMentions(
+      resolvedMentions.map(({ mention_text, entity_id }) => ({ mention_text, entity_id })),
+    );
     setIsEditing(true);
     setSaveStatus("idle");
   };
@@ -69,11 +79,20 @@ export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
 
   const handleSave = async () => {
     setSaveStatus("saving");
+
+    // Prune mentions whose @text no longer appears in the current note
+    const activeResolved = editResolvedMentions.filter((m) =>
+      editText.includes(m.mention_text),
+    );
+
     try {
       const res = await fetch(`/api/documents/${documentId}/note`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_note: editText }),
+        body: JSON.stringify({
+          user_note: editText,
+          resolved_mentions: activeResolved,
+        }),
       });
       if (res.ok) {
         setNote(editText);
@@ -157,13 +176,22 @@ export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
       <div style={{ padding: "12px 16px" }}>
         {isEditing ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {/* ND-A-04 will add @mention autocomplete here */}
-            <textarea
+            <MentionAutocomplete
               value={editText}
-              onChange={(e) => setEditText(e.target.value.slice(0, NOTE_MAX))}
+              onChange={setEditText}
+              onMentionResolved={(mention) =>
+                setEditResolvedMentions((prev) =>
+                  // Deduplicate by entity_id — autocomplete may fire twice on fast picks
+                  prev.some((m) => m.entity_id === mention.entity_id)
+                    ? prev
+                    : [...prev, mention],
+                )
+              }
               rows={4}
               placeholder={`Add context about this document…\nUse @Name to link to people, #tag to tag`}
-              style={{
+              maxLength={NOTE_MAX}
+              autoFocus
+              textareaStyle={{
                 width: "100%",
                 resize: "vertical",
                 borderRadius: 7,
@@ -176,7 +204,6 @@ export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
                 outline: "none",
                 boxSizing: "border-box",
               }}
-              autoFocus
             />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span
@@ -252,7 +279,7 @@ export function NotesPanel({ documentId, initialNote }: NotesPanelProps) {
  * ND-A-04 will add autocomplete-driven resolution; this renderer already
  * handles resolved mentions via the `resolvedMentions` list.
  */
-function renderNoteTokens(text: string, resolvedMentions: ResolvedMention[]) {
+function renderNoteTokens(text: string, resolvedMentions: ResolvedMentionWithName[]) {
   // Split on @word or #word tokens (non-space sequences after @ / word chars after #)
   const parts = text.split(/(@\S+|#\w+)/g);
 

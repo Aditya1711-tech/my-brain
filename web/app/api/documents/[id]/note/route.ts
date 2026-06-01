@@ -4,6 +4,11 @@ import { z } from "zod/v4";
 
 const NoteUpdateSchema = z.object({
   user_note: z.string().max(2000),
+  // Mentions confirmed via autocomplete; forwarded to /note-reintegrate so
+  // ND-B-04 can write note_entity_mentions rows without re-parsing the text.
+  resolved_mentions: z
+    .array(z.object({ mention_text: z.string(), entity_id: z.string().uuid() }))
+    .optional(),
 });
 
 export async function PATCH(
@@ -54,7 +59,10 @@ export async function PATCH(
         "X-API-Key": apiKey ?? "",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ doc_id: id }),
+      body: JSON.stringify({
+        doc_id: id,
+        resolved_mentions: body.resolved_mentions ?? [],
+      }),
     });
 
     if (!reintRes.ok) {
