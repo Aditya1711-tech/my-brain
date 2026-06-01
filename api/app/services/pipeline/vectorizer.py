@@ -44,14 +44,35 @@ async def vectorize_document(
         except (AttributeError, Exception) as exc:
             logger.debug("langfuse_tracing_unavailable", error=str(exc))
 
-    # Load document text + summary + extracted fields for enriched chunks
+    # Load document text + note + metadata
     result = await db.execute(
-        sql_text("SELECT raw_text, summary FROM documents WHERE id = :doc_id"),
+        sql_text("""
+            SELECT raw_text, summary, user_note, original_filename, doc_type
+            FROM documents WHERE id = :doc_id
+        """),
         {"doc_id": str(doc_id)},
     )
     row = result.fetchone()
-    raw_text = row[0] or "" if row else ""  # type: ignore[index]
-    summary = row[1] or "" if row else ""  # type: ignore[index]
+    raw_text  = row[0] or "" if row else ""  # type: ignore[index]
+    summary   = row[1] or "" if row else ""  # type: ignore[index]
+    user_note = row[2] or "" if row else ""  # type: ignore[index]
+    filename  = row[3] or "" if row else ""  # type: ignore[index]
+    doc_type  = row[4] or "unknown" if row else "unknown"  # type: ignore[index]
+
+    # Load resolved entity names from confirmed @mention picks
+    # (written by ND-C-02 mention resolver; empty until that task lands)
+    mention_names: list[str] = []
+    if user_note.strip():
+        m_result = await db.execute(
+            sql_text("""
+                SELECT e.canonical_name
+                FROM note_entity_mentions nem
+                JOIN entities e ON e.id = nem.entity_id
+                WHERE nem.document_id = :doc_id AND e.deleted_at IS NULL
+            """),
+            {"doc_id": str(doc_id)},
+        )
+        mention_names = [r[0] for r in m_result.fetchall()]  # type: ignore[index]
 
     # Load extracted field key-value pairs
     fields_result = await db.execute(
@@ -64,8 +85,22 @@ async def vectorize_document(
     )
     field_pairs = [f"{r[0]}: {r[1]}" for r in fields_result.fetchall()]  # type: ignore[index]
 
-    # Build representative text: summary + fields + raw text
-    parts = []
+    # ── Note chunk text (chunk_index = 0 — LOCKED FORMAT, do not change) ──────
+    # chunk_index = 0 is EXCLUSIVELY reserved for notes. Body chunks start at 1.
+    note_chunk_text: str | None = None
+    if user_note.strip():
+        entity_list = ", ".join(mention_names) if mention_names else "none"
+        note_chunk_text = (
+            f"Note: {user_note}\n"
+            f"Entities mentioned: {entity_list}\n"
+            f"Document: {filename} ({doc_type})"
+        )
+
+    # ── Body chunks (chunk_index = 1+) ────────────────────────────────────────
+    # Note is prepended to body text as well for embedding context continuity.
+    parts: list[str] = []
+    if user_note.strip():
+        parts.append(f"Note: {user_note}")
     if summary:
         parts.append(f"Summary: {summary}")
     if field_pairs:
@@ -73,27 +108,53 @@ async def vectorize_document(
     if raw_text:
         parts.append(raw_text)
 
-    full_text = "\n\n".join(parts)
-    if not full_text.strip():
+    body_chunks = chunk_text("\n\n".join(parts)) if parts else []
+
+    if not note_chunk_text and not body_chunks:
         logger.info("vectorizer.skip_empty", doc_id=str(doc_id))
         return
 
-    # Chunk
-    chunks = chunk_text(full_text)
-    if not chunks:
-        return
+    logger.info(
+        "vectorizer.chunking",
+        doc_id=str(doc_id),
+        note_chunk=note_chunk_text is not None,
+        body_chunk_count=len(body_chunks),
+    )
 
-    logger.info("vectorizer.chunking", doc_id=str(doc_id), chunk_count=len(chunks))
+    # ── Embed note + body in a single batched pass ────────────────────────────
+    all_texts: list[str] = (
+        [note_chunk_text] if note_chunk_text else []
+    ) + body_chunks
 
-    # Embed in batches
     all_embeddings: list[list[float]] = []
-    for i in range(0, len(chunks), EMBEDDING_BATCH_SIZE):
-        batch = chunks[i : i + EMBEDDING_BATCH_SIZE]
+    for i in range(0, len(all_texts), EMBEDDING_BATCH_SIZE):
+        batch = all_texts[i : i + EMBEDDING_BATCH_SIZE]
         batch_embeddings = await get_embeddings(batch)
         all_embeddings.extend(batch_embeddings)
 
-    # Insert chunks
-    for idx, (chunk_text_val, embedding) in enumerate(zip(chunks, all_embeddings)):
+    # ── Insert note chunk at index 0 (if present) ─────────────────────────────
+    body_start = 0
+    if note_chunk_text:
+        body_start = 1
+        note_emb_str = "[" + ",".join(str(x) for x in all_embeddings[0]) + "]"
+        await db.execute(
+            sql_text("""
+                INSERT INTO chunks (user_id, document_id, chunk_index, text, embedding)
+                VALUES (:user_id, :document_id, 0, :text, CAST(:embedding AS vector))
+            """),
+            {
+                "user_id": str(user_id),
+                "document_id": str(doc_id),
+                "text": note_chunk_text,
+                "embedding": note_emb_str,
+            },
+        )
+
+    # ── Insert body chunks at index 1+ ────────────────────────────────────────
+    # Body chunks always start at 1; index 0 is reserved for notes.
+    for idx, (chunk_text_val, embedding) in enumerate(
+        zip(body_chunks, all_embeddings[body_start:])
+    ):
         embedding_str = "[" + ",".join(str(x) for x in embedding) + "]"
         await db.execute(
             sql_text("""
@@ -103,7 +164,7 @@ async def vectorize_document(
             {
                 "user_id": str(user_id),
                 "document_id": str(doc_id),
-                "chunk_index": idx,
+                "chunk_index": idx + 1,  # 1-based; 0 is reserved for the note chunk
                 "text": chunk_text_val,
                 "embedding": embedding_str,
             },
@@ -111,14 +172,20 @@ async def vectorize_document(
 
     await db.commit()
 
+    chunks_inserted = len(all_texts)
     logger.info(
         "vectorizer.complete",
         doc_id=str(doc_id),
-        chunks_inserted=len(chunks),
+        chunks_inserted=chunks_inserted,
+        note_chunk=note_chunk_text is not None,
     )
 
     if span:
         try:
-            span.end(output={"chunks_inserted": len(chunks)})
+            span.end(output={
+                "chunks_inserted": chunks_inserted,
+                "note_chunk": note_chunk_text is not None,
+                "body_chunks": len(body_chunks),
+            })
         except (AttributeError, Exception):
             pass
