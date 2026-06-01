@@ -10,9 +10,7 @@
 ## Current
 
 - **Track A:** ND-B-03 (KI input model + prompt — blocked until Track B lands ND-D-03)
-- **Track B:** ND-D-01 (name_metaphone column + backfill)
-- **Track B:** ND-D-01 (name_metaphone column + backfill)
-- **Track B:** ND-D-01 (name_metaphone column + backfill)
+- **Track B:** ND-D-02 (expand find_candidates — phonetic + DOB + doc-type)
 
 ---
 
@@ -42,7 +40,7 @@
 | ID | Subject | Status | Closed |
 |---|---|---|---|
 | ND-A-01 | DB migration (shared with Track A) | [x] | 2026-06-02 |
-| ND-D-01 | `name_metaphone` column + backfill existing entities | [ ] | |
+| ND-D-01 | `name_metaphone` column + backfill existing entities | [x] | 2026-06-02 |
 | ND-D-02 | Expand `find_candidates` — phonetic + DOB + doc-type; threshold 0.3→0.5 | [ ] | |
 | ND-D-03 | KI — richer candidate context (relationships + doc_types + known_dob) | [ ] | |
 | ND-D-04 | Fix `uncertain` path — preserve KI signal via `entity_duplicate_candidates` rows | [ ] | |
@@ -79,6 +77,7 @@
 - 2026-06-02 | ND-A-04 | MentionAutocomplete — @entity debounced (200ms, deleted_at IS NULL), #tag lazy-load, keyboard nav, resolved_mentions forwarded to PATCH+note-reintegrate
 - 2026-06-02 | ND-B-01 | Vectorizer — note chunk at index 0 (locked format: Note+Entities mentioned+Document); body at 1+; single embed batch
 - 2026-06-02 | ND-B-02 | Orchestrator: _integrate SELECT now includes user_note; resolver.resolve_and_persist() gets user_note param
+- 2026-06-02 | ND-D-01 | metaphone added to requirements.txt; entities_repo.create() computes doublemetaphone primary on insert; backfill_metaphone.py script (batched, --dry-run)
 
 ---
 
@@ -107,3 +106,4 @@
 | 2026-06-02 | Track A | ND-A-04: MentionAutocomplete — entity search, #tag autocomplete, resolved_mentions forwarded to PATCH | ND-A-04 | ND-B-01 |
 | 2026-06-02 | Track A | ND-B-01: vectorizer — note chunk (locked format) at index 0; body at 1+; mention names in note embedding | ND-B-01 | ND-B-02 |
 | 2026-06-02 | Track A | ND-B-02: orchestrator _integrate loads user_note; resolver signature extended; log line added | ND-B-02 | ND-D-01→D-03 then ND-B-03 |
+| 2026-06-02 | Track B | ND-D-01: metaphone in requirements.txt; entities_repo.create() computes+stores metaphone; backfill_metaphone.py script | ND-D-01 | ND-D-02 |

@@ -16,6 +16,9 @@ arq
 anthropic
 openai
 
+# Phonetics
+metaphone
+
 # Document parsing
 pdfplumber
 pymupdf

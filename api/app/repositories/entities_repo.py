@@ -59,10 +59,14 @@ class EntitiesRepo:
         """Create a new entity and return its ID."""
         import json
 
+        from metaphone import doublemetaphone
+        primary, _ = doublemetaphone(canonical_name or "")
+        name_metaphone = primary or None
+
         result = await self.db.execute(
             text("""
-                INSERT INTO entities (user_id, entity_type, canonical_name, aliases, attributes, identifiers)
-                VALUES (:user_id, :entity_type, :canonical_name, CAST(:aliases AS jsonb), CAST(:attributes AS jsonb), CAST(:identifiers AS jsonb))
+                INSERT INTO entities (user_id, entity_type, canonical_name, aliases, attributes, identifiers, name_metaphone)
+                VALUES (:user_id, :entity_type, :canonical_name, CAST(:aliases AS jsonb), CAST(:attributes AS jsonb), CAST(:identifiers AS jsonb), :name_metaphone)
                 RETURNING id
             """),
             {
@@ -72,6 +76,7 @@ class EntitiesRepo:
                 "aliases": json.dumps(aliases or []),
                 "attributes": json.dumps(attributes or {}),
                 "identifiers": json.dumps(identifiers or {}),
+                "name_metaphone": name_metaphone,
             },
         )
         row = result.fetchone()
