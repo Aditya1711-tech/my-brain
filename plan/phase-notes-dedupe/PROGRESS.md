@@ -9,7 +9,8 @@
 
 ## Current
 
-- **Track A:** ND-A-03 (document detail — editable notes panel)
+- **Track A:** ND-A-04 (@mention autocomplete in note panel)
+- **Track B:** ND-D-01 (name_metaphone column + backfill)
 - **Track B:** ND-D-01 (name_metaphone column + backfill)
 
 ---
@@ -20,7 +21,7 @@
 |---|---|---|---|
 | ND-A-01 | DB migration — notes+dedupe schema | [x] | 2026-06-02 |
 | ND-A-02 | Upload UI — notes textarea in dropzone | [x] | 2026-06-02 |
-| ND-A-03 | Document detail — editable notes panel | [ ] | |
+| ND-A-03 | Document detail — editable notes panel | [x] | 2026-06-02 |
 | ND-A-04 | `@mention` autocomplete in note panel (with `deleted_at IS NULL` filter) | [ ] | |
 | ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [x] | 2026-06-02 |
 | ND-B-01 | Vectorizer — note chunk at index 0 with locked format; body chunks shift to index 1+ | [ ] | |
@@ -73,6 +74,7 @@
 - 2026-06-02 | ND-E-01 | entity_duplicate_candidates table marker (created in ND-A-01; RLS + indices confirmed)
 - 2026-06-02 | ND-A-02 | Upload UI — notes textarea (shared per-batch, 2000 char limit + counter, user_note in POST body)
 - 2026-06-02 | ND-A-05 | PATCH /api/documents/[id]/note BFF — updates user_note, resets indexed_at, calls note-reintegrate (non-blocking)
+- 2026-06-02 | ND-A-03 | Document detail — NotesPanel component; read/edit modes; @token+#tag rendering; PATCH on save
 
 ---
 
@@ -97,3 +99,4 @@
 | 2026-06-02 | both | ND-A-01: DB migration 0005 — notes+dedupe schema written; ND-E-01 marker closed | ND-A-01, ND-E-01 | ND-A-02 (Track A), ND-D-01 (Track B) |
 | 2026-06-02 | Track A | ND-A-02: dropzone notes textarea + user_note in POST body | ND-A-02 | ND-A-05, ND-D-01 |
 | 2026-06-02 | Track A | ND-A-05: PATCH /api/documents/[id]/note BFF; non-blocking note-reintegrate call | ND-A-05 | ND-A-03 |
+| 2026-06-02 | Track A | ND-A-03: NotesPanel — read/edit modes, resolved/unresolved @mention rendering, #tag chips | ND-A-03 | ND-A-04 |
