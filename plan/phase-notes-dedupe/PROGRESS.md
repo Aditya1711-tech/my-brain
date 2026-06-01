@@ -9,7 +9,8 @@
 
 ## Current
 
-- **Track A:** ND-B-02 (orchestrator — load user_note in _integrate)
+- **Track A:** ND-B-03 (KI input model + prompt — blocked until Track B lands ND-D-03)
+- **Track B:** ND-D-01 (name_metaphone column + backfill)
 - **Track B:** ND-D-01 (name_metaphone column + backfill)
 - **Track B:** ND-D-01 (name_metaphone column + backfill)
 
@@ -25,7 +26,7 @@
 | ND-A-04 | `@mention` autocomplete in note panel (with `deleted_at IS NULL` filter) | [x] | 2026-06-02 |
 | ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [x] | 2026-06-02 |
 | ND-B-01 | Vectorizer — note chunk at index 0 with locked format; body chunks shift to index 1+ | [x] | 2026-06-02 |
-| ND-B-02 | Orchestrator — load `user_note` in `_integrate` | [ ] | |
+| ND-B-02 | Orchestrator — load `user_note` in `_integrate` | [x] | 2026-06-02 |
 | ND-B-03 | `KnowledgeIntegratorInput` — add `user_note` + prompt section | [ ] | |
 | ND-B-04 | FastAPI `/note-reintegrate` endpoint (routes new entities through `entity_resolver`) | [ ] | |
 | ND-B-05 | Full-text TSV includes `user_note`; +0.3 note_match score boost | [ ] | |
@@ -77,6 +78,7 @@
 - 2026-06-02 | ND-A-03 | Document detail — NotesPanel component; read/edit modes; @token+#tag rendering; PATCH on save
 - 2026-06-02 | ND-A-04 | MentionAutocomplete — @entity debounced (200ms, deleted_at IS NULL), #tag lazy-load, keyboard nav, resolved_mentions forwarded to PATCH+note-reintegrate
 - 2026-06-02 | ND-B-01 | Vectorizer — note chunk at index 0 (locked format: Note+Entities mentioned+Document); body at 1+; single embed batch
+- 2026-06-02 | ND-B-02 | Orchestrator: _integrate SELECT now includes user_note; resolver.resolve_and_persist() gets user_note param
 
 ---
 
@@ -104,3 +106,4 @@
 | 2026-06-02 | Track A | ND-A-03: NotesPanel — read/edit modes, resolved/unresolved @mention rendering, #tag chips | ND-A-03 | ND-A-04 |
 | 2026-06-02 | Track A | ND-A-04: MentionAutocomplete — entity search, #tag autocomplete, resolved_mentions forwarded to PATCH | ND-A-04 | ND-B-01 |
 | 2026-06-02 | Track A | ND-B-01: vectorizer — note chunk (locked format) at index 0; body at 1+; mention names in note embedding | ND-B-01 | ND-B-02 |
+| 2026-06-02 | Track A | ND-B-02: orchestrator _integrate loads user_note; resolver signature extended; log line added | ND-B-02 | ND-D-01→D-03 then ND-B-03 |
