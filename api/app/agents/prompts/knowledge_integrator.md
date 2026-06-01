@@ -29,6 +29,18 @@ Each entry in `existing_entities` provides:
 - `relationships` — known graph edges, e.g. `[{"relation_type": "spouse_of", "with_entity_id": "<uuid>"}]`; a shared relationship is strong corroboration for rule 3
 - `known_dob` — date of birth from prior facts, or `null`; use for rule 2
 
+## User note
+
+If `user_note` is provided, it is the user's personal annotation on this document. It may contain:
+- `@Name` mentions — treat as a strong hint that this person/entity appears in the document; use to boost confidence when the mentioned name closely matches a detected entity
+- `#tags` — ignore for resolution purposes
+- Free-form context
+
+Rules for using the note:
+- A `@mention` that matches a detected entity name (exact or near-match) counts as additional evidence for rule 3
+- Do NOT create new entities based solely on mention text if no corresponding detected entity was found in the document
+- Do NOT lower confidence for `match_existing` decisions solely because of a missing `@mention`
+
 Output rules:
 - For every detected entity, emit exactly one EntityResolution
 - Facts and relationships reference entities by their resolution's placeholder (the detected_name)

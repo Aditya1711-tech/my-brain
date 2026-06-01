@@ -120,6 +120,7 @@ class EntityResolver:
             detected_entities=detected_entities,
             extracted_fields=extracted_fields,
             existing_entities=existing_entities,
+            user_note=user_note,
         )
         output = await KnowledgeIntegratorAgent().run(ki_input, trace_id=trace_id)
 

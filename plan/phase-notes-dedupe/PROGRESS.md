@@ -9,7 +9,7 @@
 
 ## Current
 
-- **Track A:** ND-B-03 (KI input model + prompt — Track B ND-D-03 now landed, unblocked)
+- **Track A:** ND-B-04 (FastAPI /note-reintegrate endpoint)
 - **Track B:** ND-D-04 (fix uncertain path — write entity_duplicate_candidates rows)
 
 ---
@@ -25,7 +25,7 @@
 | ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [x] | 2026-06-02 |
 | ND-B-01 | Vectorizer — note chunk at index 0 with locked format; body chunks shift to index 1+ | [x] | 2026-06-02 |
 | ND-B-02 | Orchestrator — load `user_note` in `_integrate` | [x] | 2026-06-02 |
-| ND-B-03 | `KnowledgeIntegratorInput` — add `user_note` + prompt section | [ ] | |
+| ND-B-03 | `KnowledgeIntegratorInput` — add `user_note` + prompt section | [x] | 2026-06-02 |
 | ND-B-04 | FastAPI `/note-reintegrate` endpoint (routes new entities through `entity_resolver`) | [ ] | |
 | ND-B-05 | Full-text TSV includes `user_note`; +0.3 note_match score boost | [ ] | |
 | ND-C-01 | `@mention` parser (pure function) | [ ] | |
@@ -80,6 +80,7 @@
 - 2026-06-02 | ND-D-01 | metaphone added to requirements.txt; entities_repo.create() computes doublemetaphone primary on insert; backfill_metaphone.py script (batched, --dry-run)
 - 2026-06-02 | ND-D-02 | find_candidates: trigram 0.3→0.5, deleted_at IS NULL, phonetic OR condition, DOB facts subquery, linked_doc_types correlated subquery; entity_resolver extracts DOB + forwards linked_doc_types to KI
 - 2026-06-02 | ND-D-03 | entity_resolver: batch relationships + DOB queries (one each); attach relationships+known_dob to candidate dicts; KI prompt: existing_entities format section added
+- 2026-06-02 | ND-B-03 | KnowledgeIntegratorInput.user_note field added; entity_resolver passes user_note to KI; prompt user_note section with @mention rules
 
 ---
 
@@ -111,3 +112,4 @@
 | 2026-06-02 | Track B | ND-D-01: metaphone in requirements.txt; entities_repo.create() computes+stores metaphone; backfill_metaphone.py script | ND-D-01 | ND-D-02 |
 | 2026-06-02 | Track B | ND-D-02: find_candidates — trigram 0.5, phonetic OR, DOB facts subquery, linked_doc_types, deleted_at IS NULL; entity_resolver forwards dob + linked_doc_types | ND-D-02 | ND-D-03 |
 | 2026-06-02 | Track B | ND-D-03: batch relationships + DOBs onto candidate dicts; KI prompt existing_entities format section; ND-B-03 now unblocked | ND-D-03 | ND-D-04 (Track B), ND-B-03 (Track A) |
+| 2026-06-02 | Track A | ND-B-03: KnowledgeIntegratorInput.user_note field; resolver passes user_note to KI; prompt section with @mention rules (after D-03 landed) | ND-B-03 | ND-B-04 |

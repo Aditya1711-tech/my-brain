@@ -33,6 +33,7 @@ class KnowledgeIntegratorInput(BaseModel):
     detected_entities: list[dict]  # ExtractedEntity dicts from extractor
     extracted_fields: list[dict]  # field dicts with name/value/type
     existing_entities: list[dict]  # candidate entities from DB for resolution
+    user_note: str | None = None  # user's free-text annotation; may contain @mentions and #tags
 
 
 class IntegrationOutput(BaseModel):
