@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "re
 import { useRouter } from "next/navigation";
 import { Search, X, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useIsMobile } from "@/lib/hooks/use-is-mobile";
 
 interface SearchChip {
   facet: string;
@@ -42,6 +43,7 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
   const [documents, setDocuments] = useState<DocumentResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const isMobile = useIsMobile();
 
   const runSearch = useCallback(
     async (searchChips: SearchChip[], newTerm?: string) => {
@@ -114,14 +116,18 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
     }
   };
 
+  const hPad = isMobile ? "16px" : "40px";
+  const vPadTop = isMobile ? "20px" : "40px";
+  const vPadBottom = isMobile ? "var(--mobile-content-pb, 96px)" : "80px";
+
   return (
-    <div style={{ padding: "40px 40px 80px", display: "flex", flexDirection: "column", gap: 24 }}>
+    <div style={{ padding: `${vPadTop} ${hPad} ${vPadBottom}`, display: "flex", flexDirection: "column", gap: 24 }}>
       <h2
         style={{
           fontFamily: "var(--trove-serif, Georgia, serif)",
           fontStyle: "italic",
           fontWeight: 400,
-          fontSize: 44,
+          fontSize: isMobile ? 28 : 44,
           letterSpacing: "-0.02em",
           color: "var(--fg-strong)",
         }}
@@ -220,7 +226,7 @@ export function SearchPage({ initialQuery }: { initialQuery?: string }) {
 
       {/* Results grid */}
       {documents.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}>
           {documents.map((doc, i) => (
             <div
               key={doc.id}

@@ -389,7 +389,10 @@ export function ChatPanel({
       </div>
 
       {/* Input */}
-      <div className="border-t p-3 flex flex-col gap-1.5">
+      <div
+        className="border-t flex flex-col gap-1.5"
+        style={{ padding: "12px 12px max(12px, env(safe-area-inset-bottom, 0px)) 12px" }}
+      >
         <div className="flex gap-2">
           <Input
             placeholder="Ask a question…"

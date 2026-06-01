@@ -18,6 +18,7 @@ import { DocumentViewerModal } from "@/components/shared/document-viewer-modal";
 import { Button } from "@/components/ui/button";
 import { useRealtimeDocuments } from "@/lib/hooks/use-realtime-documents";
 import { ChatPanel } from "@/components/chat/chat-panel";
+import { useIsMobile } from "@/lib/hooks/use-is-mobile";
 
 interface DocumentDetail {
   id: string;
@@ -89,6 +90,7 @@ const STATUS_ORDER = [
 
 export function DocumentDetailPage({ documentId }: { documentId: string }) {
   const router = useRouter();
+  const isMobile = useIsMobile();
   const [doc, setDoc] = useState<DocumentDetail | null>(null);
   const [fields, setFields] = useState<ExtractedField[]>([]);
   const [events, setEvents] = useState<PipelineEvent[]>([]);
@@ -213,9 +215,10 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
   }
 
   const currentStatusIndex = STATUS_ORDER.indexOf(doc.status);
+  const hPad = isMobile ? "16px" : "40px";
 
   return (
-    <div className="space-y-6" style={{ padding: "40px 40px 80px" }}>
+    <div className="space-y-6" style={{ padding: `${isMobile ? "16px" : "40px"} ${hPad} ${isMobile ? "var(--mobile-content-pb, 96px)" : "80px"}` }}>
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button variant="ghost" size="sm" onClick={() => router.push("/")}>
@@ -224,13 +227,13 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
         </Button>
       </div>
 
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <FileText className="h-6 w-6" />
-            {doc.original_filename}
+      <div className={`flex ${isMobile ? "flex-col gap-3" : "items-start justify-between"}`}>
+        <div className="space-y-1 min-w-0">
+          <h1 className={`${isMobile ? "text-lg" : "text-2xl"} font-semibold flex items-center gap-2`}>
+            <FileText className="h-5 w-5 shrink-0" />
+            <span className="truncate">{doc.original_filename}</span>
           </h1>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="uppercase">{doc.file_type}</span>
             <span>{formatBytes(doc.size_bytes)}</span>
             {doc.doc_type && (
@@ -243,7 +246,7 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
             {doc.language && <span>{doc.language}</span>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${isMobile ? "self-start" : ""}`}>
           <Button
             variant="outline"
             size="sm"
@@ -569,6 +572,8 @@ export function DocumentDetailPage({ documentId }: { documentId: string }) {
 }
 
 function ChatSidePanel({ documentId, onClose }: { documentId: string; onClose: () => void }) {
+  const isMobile = useIsMobile();
+
   // Escape key handler
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -580,16 +585,22 @@ function ChatSidePanel({ documentId, onClose }: { documentId: string; onClose: (
     <div
       style={{
         position: "fixed",
-        top: 0,
+        top: isMobile ? "auto" : 0,
+        bottom: isMobile ? 0 : "auto",
         right: 0,
-        width: 384,
-        height: "100%",
-        borderLeft: "1px solid var(--border-faint)",
+        left: isMobile ? 0 : "auto",
+        width: isMobile ? "100%" : 384,
+        height: isMobile ? "70vh" : "100%",
+        borderLeft: isMobile ? "none" : "1px solid var(--border-faint)",
+        borderTop: isMobile ? "1px solid var(--border-faint)" : "none",
+        borderRadius: isMobile ? "18px 18px 0 0" : 0,
         background: "var(--bg-elevated)",
         zIndex: 30,
         display: "flex",
         flexDirection: "column",
-        animation: "k-slide-in-right 240ms var(--trove-ease-out, ease-out) both",
+        animation: isMobile
+          ? "k-sheet-in 240ms var(--trove-ease-out, ease-out) both"
+          : "k-slide-in-right 240ms var(--trove-ease-out, ease-out) both",
         boxShadow: "var(--trove-shadow-lg)",
       }}
     >

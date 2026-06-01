@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import dynamic from "next/dynamic";
 import { Loader2, X, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/lib/hooks/use-is-mobile";
 
 // Force graph must be client-side only (uses canvas)
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -343,6 +344,8 @@ export function GraphPage() {
 }
 
 function EntitySidePanel({ entity, onClose }: { entity: EntityDetail; onClose: () => void }) {
+  const isMobile = useIsMobile();
+
   useEffect(() => {
     const handler = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handler);
@@ -353,16 +356,22 @@ function EntitySidePanel({ entity, onClose }: { entity: EntityDetail; onClose: (
     <div
       style={{
         position: "absolute",
-        top: 0,
+        top: isMobile ? "auto" : 0,
+        bottom: isMobile ? 0 : "auto",
         right: 0,
-        height: "100%",
-        width: 320,
+        left: isMobile ? 0 : "auto",
+        height: isMobile ? "60vh" : "100%",
+        width: isMobile ? "100%" : 320,
         background: "var(--bg-elevated)",
-        borderLeft: "1px solid var(--border-faint)",
+        borderLeft: isMobile ? "none" : "1px solid var(--border-faint)",
+        borderTop: isMobile ? "1px solid var(--border-faint)" : "none",
+        borderRadius: isMobile ? "18px 18px 0 0" : 0,
         boxShadow: "var(--trove-shadow-lg)",
         zIndex: 20,
         overflowY: "auto",
-        animation: "k-slide-in-right 240ms var(--trove-ease-out, ease-out) both",
+        animation: isMobile
+          ? "k-sheet-in 240ms var(--trove-ease-out, ease-out) both"
+          : "k-slide-in-right 240ms var(--trove-ease-out, ease-out) both",
       }}
     >
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
