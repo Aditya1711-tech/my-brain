@@ -9,7 +9,7 @@
 
 ## Current
 
-- **Track A:** ND-A-05 (PATCH /note BFF endpoint — prereq for ND-A-03)
+- **Track A:** ND-A-03 (document detail — editable notes panel)
 - **Track B:** ND-D-01 (name_metaphone column + backfill)
 
 ---
@@ -22,7 +22,7 @@
 | ND-A-02 | Upload UI — notes textarea in dropzone | [x] | 2026-06-02 |
 | ND-A-03 | Document detail — editable notes panel | [ ] | |
 | ND-A-04 | `@mention` autocomplete in note panel (with `deleted_at IS NULL` filter) | [ ] | |
-| ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [ ] | |
+| ND-A-05 | PATCH /api/documents/:id/note BFF endpoint | [x] | 2026-06-02 |
 | ND-B-01 | Vectorizer — note chunk at index 0 with locked format; body chunks shift to index 1+ | [ ] | |
 | ND-B-02 | Orchestrator — load `user_note` in `_integrate` | [ ] | |
 | ND-B-03 | `KnowledgeIntegratorInput` — add `user_note` + prompt section | [ ] | |
@@ -72,6 +72,7 @@
 - 2026-06-02 | ND-A-01 | DB migration — notes+dedupe schema (migration `20260602_0005`; both tables, all columns, RLS, TSV trigger)
 - 2026-06-02 | ND-E-01 | entity_duplicate_candidates table marker (created in ND-A-01; RLS + indices confirmed)
 - 2026-06-02 | ND-A-02 | Upload UI — notes textarea (shared per-batch, 2000 char limit + counter, user_note in POST body)
+- 2026-06-02 | ND-A-05 | PATCH /api/documents/[id]/note BFF — updates user_note, resets indexed_at, calls note-reintegrate (non-blocking)
 
 ---
 
@@ -95,3 +96,4 @@
 | 2026-06-02 | planning | Plan revised — 11 design improvements folded in (uncertain signal preservation, chunk index convention, @mention safety, embedded entity names in note chunk, fact-conflict semantics, monotonic confidence, backfill safety cap, deleted_at audit, tracing audit, notes backfill task) | — | Awaiting human approval |
 | 2026-06-02 | both | ND-A-01: DB migration 0005 — notes+dedupe schema written; ND-E-01 marker closed | ND-A-01, ND-E-01 | ND-A-02 (Track A), ND-D-01 (Track B) |
 | 2026-06-02 | Track A | ND-A-02: dropzone notes textarea + user_note in POST body | ND-A-02 | ND-A-05, ND-D-01 |
+| 2026-06-02 | Track A | ND-A-05: PATCH /api/documents/[id]/note BFF; non-blocking note-reintegrate call | ND-A-05 | ND-A-03 |
